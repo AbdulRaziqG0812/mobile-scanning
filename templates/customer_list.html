@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Customer List</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    body { 
+      font-family: "Segoe UI", Tahoma, sans-serif; 
+      background: #f4f6f9; 
+      margin: 0; 
+      padding: 20px; 
+      color: #333;
+    }
+
+    h1 { 
+      text-align: center; 
+      color: #004aad; 
+      margin-bottom: 30px; 
+      font-size: 30px; 
+      font-weight: 700;
+      text-transform: uppercase;
+      border-bottom: 3px solid #004aad;
+      display: inline-block;
+      padding-bottom: 8px;
+    }
+
+    /* Top action bar */
+    .top-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-bottom: 25px;
+      flex-wrap: wrap;
+    }
+
+    /* Buttons */
+    .btn { 
+      padding: 8px 14px; 
+      border-radius: 8px; 
+      color: white; 
+      font-size: 14px; 
+      text-decoration: none; 
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.25s ease;
+      border: none;
+      cursor: pointer;
+    }
+    .btn i { font-size: 14px; }
+    .btn-success { background: #28a745; }
+    .btn-home { background: #17a2b8; }
+    .btn-edit { background: #ffc107; color: #000; }
+    .btn-delete { background: #dc3545; }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 3px 8px rgba(0,0,0,0.2); }
+
+    /* Table */
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+      background: #fff;
+    }
+    table { 
+      width: 100%;
+      border-collapse: collapse; 
+      background: #fff; 
+    }
+    th, td { 
+      padding: 12px 14px; 
+      text-align: center; 
+      font-size: 14px; 
+      border: 1px solid #d1d9e6;
+    }
+    th { 
+      background: #007bff; 
+      color: white; 
+      font-weight: 600; 
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      font-size: 13px;
+    }
+    tr:nth-child(even) { background: #f9f9f9; }
+    tr:hover { background: #eef6ff; transition: 0.2s; }
+
+    /* Action buttons */
+    .action-btn {
+      padding: 6px 10px;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      gap: 6px;
+    }
+    .action-btn i { font-size: 13px; }
+
+    /* Flash Messages */
+    .alert { 
+      padding: 12px; 
+      margin: 15px auto; 
+      width: 95%; 
+      border-radius: 8px; 
+      font-weight: 500; 
+      text-align: center; 
+      box-shadow: 0 3px 6px rgba(0,0,0,0.1); 
+    }
+    .alert-success { background: #28a745; color: #fff; }
+    .alert-error { background: #dc3545; color: #fff; }
+  </style>
+</head>
+<body>
+
+  <div style="text-align:center;">
+    <h1>👥 Customer List</h1>
+  </div>
+
+  <!-- Flash Messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, msg in messages %}
+        <div class="alert alert-{{ 'success' if category=='success' else 'error' }}">
+          {{ msg }}
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <!-- Top Actions -->
+  <div class="top-actions">
+    <a href="/customer" class="btn btn-success">
+      <i class="fa fa-plus"></i> Add Customer
+    </a>
+    <a href="/homepage" class="btn btn-home">
+      <i class="fa fa-home"></i> Home
+    </a>
+  </div>
+
+  <!-- Customer Table -->
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:60px;">ID</th>
+          <th style="width:180px;">Customer Name</th>
+          <th style="width:120px;">Mobile</th>
+          <th style="width:180px;">Contact</th>
+          <th style="width:200px;">Address</th>
+          <th style="width:140px;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in customers %}
+        <tr>
+          <td>{{ c.customer_id }}</td>
+          <td>{{ c.name }}</td>
+          <td>{{ c.mobile }}</td>
+          <td>{{ c.Contact }}</td>
+          <td>{{ c.address }}</td>
+          <td>
+            <a href="{{ url_for('edit_customer', id=c.customer_id) }}" class="btn action-btn btn-edit">
+              <i class="fa fa-pen"></i>
+            </a>
+            <form method="post" action="{{ url_for('delete_customer', id=c.customer_id) }}" style="display:inline;">
+              <button type="submit" class="btn action-btn btn-delete" onclick="return confirm('Are you sure?')">
+                <i class="fa fa-trash"></i>
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="6" style="padding:18px;color:#777;">No customers found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</body>
+</html>

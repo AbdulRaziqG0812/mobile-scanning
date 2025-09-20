@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Add Customer</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f4f6f9;
+      margin: 0;
+      padding: 30px;
+    }
+
+    .form-container {
+      max-width: 600px;
+      margin: auto;
+      background: #fff;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      text-align: center;
+      color: #004aad;
+      margin-bottom: 20px;
+      font-size: 24px;
+    }
+
+    label {
+      font-weight: 600;
+      display: block;
+      margin-bottom: 6px;
+      color: #333;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    /* ✅ Flash Messages */
+    .alert {
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+    .alert-success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .alert-error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 14px;
+    }
+
+    .btn-save {
+      background: #28a745;
+      color: #fff;
+    }
+    .btn-save:hover { background: #218838; }
+
+    .btn-back {
+      background: #2848a7;
+      color: #fff;
+      margin-left: 10px;
+    }
+    .btn-back:hover { background: #1e3480; }
+
+    /* ✅ Button alignment */
+    .form-actions {
+      text-align: center;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <h2>➕ Add Customer</h2>
+
+    <!-- ✅ Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, msg in messages %}
+          <div class="alert alert-{{ 'success' if category=='success' else 'error' }}">
+            {{ msg }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="/customer">
+      <label>Customer Name</label>
+      <input type="text" name="name" placeholder="Enter customer name" required>
+
+      <label>Mobile</label>
+      <input type="text" name="mobile" placeholder="Enter mobile number" required>
+
+      <label>Contact</label>
+      <input type="number" name="Contact" placeholder="Enter Contact">
+
+      <label>Address</label>
+      <input type="text" name="address" placeholder="Enter address">
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-save"><i class="fa fa-save"></i> Save</button>
+        <a href="/customer_list" class="btn btn-back"><i class="fa fa-arrow-left"></i> Back to List</a>
+      </div>
+    </form>
+  </div>
+</body>
+</html>

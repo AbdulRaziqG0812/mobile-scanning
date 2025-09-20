@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Register Page</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    body {
+      height: 100vh;
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(135deg, #e0f0ff, #f5faff);
+    }
+
+    .register-container {
+      background: #fff;
+      padding: 45px 40px;
+      border-radius: 14px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+      width: 100%;
+      max-width: 450px;
+      animation: fadeIn 0.8s ease;
+    }
+
+    h2 {
+      text-align: center;
+      color: #004aad;
+      font-size: 28px;
+      margin-bottom: 20px;
+      font-weight: 700;
+    }
+
+    /* ✅ Flash Messages */
+    .flash-container {
+      margin-bottom: 20px;
+    }
+    .message {
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      font-size: 14px;
+      font-weight: 500;
+      text-align: center;
+      animation: fadeIn 0.5s ease;
+    }
+    .success {
+      background: #e6ffed;
+      border: 1.5px solid #28a745;
+      color: #155724;
+    }
+    .error {
+      background: #ffe6e6;
+      border: 1.5px solid #dc3545;
+      color: #721c24;
+    }
+
+    .form-group {
+      margin-bottom: 22px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #34495e;
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .input-field {
+      position: relative;
+      width: 100%;
+    }
+
+    .input-field input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 14px 45px 14px 40px;
+      border: 1.5px solid #d0d7de;
+      border-radius: 10px;
+      font-size: 15px;
+      outline: none;
+      transition: border 0.3s, box-shadow 0.3s;
+    }
+
+    .input-field input:focus {
+      border-color: #007bff;
+      box-shadow: 0 0 0 4px rgba(0,123,255,0.15);
+    }
+
+    .input-field .left-icon {
+      position: absolute;
+      top: 50%;
+      left: 12px;
+      transform: translateY(-50%);
+      color: #555;
+      font-size: 16px;
+    }
+
+    .toggle-password {
+      position: absolute;
+      top: 50%;
+      right: 12px;
+      transform: translateY(-50%);
+      cursor: pointer;
+      color: #555;
+      font-size: 16px;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 17px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 10px;
+      box-sizing: border-box;
+    }
+
+    button:hover {
+      background: #0056b3;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 91, 187, 0.25);
+    }
+
+    .note {
+      font-size: 13px;
+      text-align: center;
+      margin-top: 20px;
+      color: #7f8c8d;
+    }
+
+    .note a {
+      color: #007bff;
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .note a:hover {
+      text-decoration: underline;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="register-container">
+    <h2><i class="fa-solid fa-user-plus"></i> Register</h2>
+
+    <!-- ✅ Flask flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-container">
+          {% for category, msg in messages %}
+            <div class="message {{ category }}">
+              {{ msg }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <form method="post" action="/register">
+      <div class="form-group">
+        <div class="input-field">
+          <i class="fa-solid fa-user left-icon"></i>
+          <input type="text" id="fullname" name="fullname" placeholder="Enter your full name" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="input-field">
+          <i class="fa-solid fa-envelope left-icon"></i>
+          <input type="email" id="email" name="email" placeholder="Enter your email address" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="input-field">
+          <i class="fa-solid fa-lock left-icon"></i>
+          <input type="password" id="password" name="password" placeholder="Enter your password" required>
+          <i class="fa-solid fa-eye-slash toggle-password" data-target="password"></i>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="input-field">
+          <i class="fa-solid fa-lock left-icon"></i>
+          <input type="password" id="confirm" name="confirm" placeholder="Re-enter your password" required>
+          <i class="fa-solid fa-eye-slash toggle-password" data-target="confirm"></i>
+        </div>
+      </div>
+
+      <button type="submit"><i class="fa-solid fa-user-plus"></i> Register</button>
+    </form>
+
+    <div class="note">
+      Already have an account? <a href="/loginpage">Login</a>
+    </div>
+  </div>
+
+  <!-- ✅ JS external file include -->
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
