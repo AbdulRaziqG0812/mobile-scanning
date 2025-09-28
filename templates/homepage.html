@@ -117,10 +117,11 @@ body {
     <div class="navbar">
         <h2>📱 Mobile Shop Billing</h2>
         <ul>
+          <li><a href="{{ url_for('company') }}">company Info</a></li>
             <li><a href="{{ url_for('category_list') }}">Categories</a></li>
             <li><a href="{{ url_for('product_list') }}">Products</a></li>
             <li><a href="{{ url_for('customer_list') }}">Customers</a></li>
-            <li><a href="#">Billing</a></li>
+            <li><a href="{{ url_for('billing_list') }}">Billing</a></li>
             <li><a href="#">Reports</a></li>
             <li><a href="{{ url_for('loginpage') }}">Logout</a></li>
         </ul>
@@ -142,15 +143,22 @@ body {
             </div>
             <div class="card">
                 <i class="fa-solid fa-receipt"></i>
-                <h4>Today Sales</h4>
-                <p>{{ today_sales }}</p>
+                <h4>Monthly Sales</h4>
+                <p>{{ monthly_sales }}</p>
             </div>
             <div class="card">
                 <i class="fa-solid fa-dollar-sign"></i>
                 <h4>Total Revenue</h4>
-                <p>Rs. {{ total_revenue }}</p>
+                <p>OMR {{ monthly_revenue }}</p>
             </div>
         </div>
     </div>
+  <script>
+    // Auto-hide flash messages after 3 seconds
+    document.addEventListener("DOMContentLoaded", () => {
+      const alerts = document.querySelectorAll('.alert');
+      alerts.forEach(alert => setTimeout(() => alert.remove(), 3000));
+    });
+  </script>
 </body>
 </html>

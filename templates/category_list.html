@@ -174,5 +174,13 @@
     </table>
   </div>
 
+<script> 
+// Auto-hide flash messages after 3 seconds
+    document.addEventListener("DOMContentLoaded", () => {
+      const alerts = document.querySelectorAll('.alert');
+      alerts.forEach(alert => setTimeout(() => alert.remove(), 3000));
+    });
+</script>
+
 </body>
 </html>

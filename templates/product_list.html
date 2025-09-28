@@ -62,6 +62,15 @@
     tr:nth-child(even) { background: #f9f9f9; }
     tr:hover { background: #eef6ff; transition: 0.2s; }
 
+    /* ✅ Simplified Total Row */
+    tfoot tr {
+        background: #e7f0ff;
+        color: #000;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 14px;
+    }
+
     /* Buttons */
     .btn { 
         padding: 7px 12px; 
@@ -82,26 +91,24 @@
     .btn-success { background: #28a745; }
     .btn-back { background: #17a2b8; }
     .btn-filter { background: #6c63ff; }
-    .btn-export { background: #ff9800; }
-    .btn-export:hover { background: #e68900; }
 
     .btn:hover { 
         transform: translateY(-2px); 
         box-shadow: 0 3px 8px rgba(0,0,0,0.2); 
     }
 
-    /* Alerts */
+    /* ✅ Unified Alert Styling */
     .alert { 
-        padding: 12px; 
+        padding: 12px 15px; 
         margin: 15px auto; 
         width: 95%; 
         border-radius: 8px; 
         font-weight: 500; 
         text-align: center; 
+        color: #fff;
+        background: #007bff;
         box-shadow: 0 3px 6px rgba(0,0,0,0.1); 
     }
-    .alert-success { background: #28a745; color: #fff; }
-    .alert-error { background: #dc3545; color: #fff; }
 
     /* Top action bar */
     .top-actions {
@@ -113,7 +120,7 @@
         gap: 12px;
     }
 
-    /* Left (Search Box) */
+    /* Search box */
     .search-box form {
         display: flex;
         gap: 10px;
@@ -138,11 +145,40 @@
         outline: none;
     }
 
-    /* Right (Buttons group) */
+    /* Buttons group */
     .action-buttons {
         display: flex;
         gap: 10px;
         flex-wrap: wrap;
+    }
+
+    /* ✅ Pagination Styling */
+    #pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+    .page-btn {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .page-btn:hover { background: #0056b3; }
+    .page-btn.active {
+      background: #28a745;
+      font-weight: bold;
+      transform: scale(1.05);
+    }
+    .page-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
   </style>
 </head>
@@ -152,48 +188,41 @@
       <h1>📱 Product List</h1>
   </div>
 
-  <!-- Flash Messages -->
+  <!-- ✅ Flash Messages -->
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
       {% for category, message in messages %}
-        <div class="alert alert-{{ 'success' if category=='success' else 'error' }}">
-          <i class="fa-solid fa-circle-{{ 'check' if category=='success' else 'exclamation' }}"></i>
-          {{ message }}
+        <div class="alert">
+          <i class="fa-solid fa-info-circle"></i> {{ message }}
         </div>
       {% endfor %}
     {% endif %}
   {% endwith %}
 
-  <!-- Top Actions -->
+  <!-- ✅ Top Actions -->
   <div class="top-actions">
-      <!-- 🔎 Search box -->
     <div class="search-box">
       <form method="GET" action="{{ url_for('search') }}">
-        <input type="text" 
-               name="q" 
-               placeholder="Search by Category or Model..." 
-               value="{{ keyword }}">
+        <input type="text" name="q" placeholder="Search by Category, Model or IMEI..." value="{{ keyword }}">
         <button type="submit" class="btn btn-filter">
             <i class="fa-solid fa-magnifying-glass"></i> Search
         </button>
       </form>
     </div>
 
-
-      <!-- Action buttons -->
-      <div class="action-buttons">
-          <a href="/product" class="btn btn-success">
-              <i class="fa-solid fa-plus"></i> Add Product
-          </a>
-          <a href="/homepage" class="btn btn-back">
-              <i class="fa-solid fa-house"></i> Home
-          </a>
-      </div>
+    <div class="action-buttons">
+        <a href="/product" class="btn btn-success">
+            <i class="fa-solid fa-plus"></i> Add Product
+        </a>
+        <a href="/homepage" class="btn btn-back">
+            <i class="fa-solid fa-house"></i> Home
+        </a>
+    </div>
   </div>
 
-  <!-- Product Table -->
+  <!-- ✅ Product Table -->
   <div class="table-container">
-    <table>
+    <table class="paginated-table">
       <thead>
         <tr>
           <th>ID</th>
@@ -206,8 +235,9 @@
           <th>Storage</th>
           <th>Display Size</th>
           <th>Stock</th>
-          <th>Price</th>
-          <th style="width:120px; text-align:center;">Actions</th>
+          <th>Purchase Price</th>
+          <th>Sale Price</th>
+          <th style="width:120px;">Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -223,8 +253,9 @@
           <td>{{ p.iphone_storage }}</td>
           <td>{{ p.iphone_display_size }}</td>
           <td>{{ p.iphone_stock }}</td>
-          <td>{{ p.iphone_price }}</td>
-          <td style="text-align:center;">
+          <td>{{ p.iphone_purchase_price }}</td>
+          <td>{{ p.iphone_sale_price }}</td>
+          <td>
             <a href="{{ url_for('edit_product', product_id=p.product_id) }}" class="btn btn-primary" title="Edit">
               <i class="fa fa-pen"></i>
             </a>
@@ -237,12 +268,84 @@
         </tr>
         {% else %}
         <tr>
-          <td colspan="12" style="padding:18px;color:#777;">No products found.</td>
+          <td colspan="13" style="padding:18px;color:#777;">No products found.</td>
         </tr>
         {% endfor %}
       </tbody>
+
+      <!-- ✅ Total Summary Row -->
+      <tfoot>
+        <tr>
+          <td colspan="10" style="text-align:right;">Total Summary</td>
+          <td>OMR {{ total_purchase }}</td>
+          <td>OMR {{ total_sale }}</td>
+          <td></td>
+        </tr>
+      </tfoot>
     </table>
   </div>
+
+  <!-- ✅ Pagination (auto added by JS) -->
+  <div id="pagination"></div>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const rowsPerPage = 15;
+  const table = document.querySelector(".paginated-table");
+  const tbody = table.querySelector("tbody");
+  const rows = Array.from(tbody.querySelectorAll("tr"));
+  const totalRows = rows.length;
+  const pagination = document.getElementById("pagination");
+
+  const totalPages = Math.ceil(totalRows / rowsPerPage);
+  let currentPage = 1;
+
+  function displayPage(page) {
+    currentPage = page;
+    const start = (page - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
+
+    rows.forEach((row, index) => {
+      row.style.display = (index >= start && index < end) ? "" : "none";
+    });
+
+    updatePagination();
+  }
+
+  function updatePagination() {
+    pagination.innerHTML = "";
+
+    // Prev button
+    const prevBtn = document.createElement("button");
+    prevBtn.innerHTML = "«";
+    prevBtn.disabled = currentPage === 1;
+    prevBtn.className = "page-btn";
+    prevBtn.onclick = () => displayPage(currentPage - 1);
+    pagination.appendChild(prevBtn);
+
+    // ✅ Only one block with changing number
+    const pageBlock = document.createElement("button");
+    pageBlock.innerHTML = currentPage;
+    pageBlock.className = "page-btn active";
+    pagination.appendChild(pageBlock);
+
+    // Next button
+    const nextBtn = document.createElement("button");
+    nextBtn.innerHTML = "»";
+    nextBtn.disabled = currentPage === totalPages;
+    nextBtn.className = "page-btn";
+    nextBtn.onclick = () => displayPage(currentPage + 1);
+    pagination.appendChild(nextBtn);
+  }
+
+  displayPage(1);
+});
+// Auto-hide flash messages after 3 seconds
+    document.addEventListener("DOMContentLoaded", () => {
+      const alerts = document.querySelectorAll('.alert');
+      alerts.forEach(alert => setTimeout(() => alert.remove(), 3000));
+    });
+</script>
+
 
 </body>
 </html>

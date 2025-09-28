@@ -117,7 +117,7 @@
       <div class="col-md-12">
         <label for="category">Select Category</label>
         <select name="category" id="category" class="form-select" required>
-          <option value="category">-- Select Category --</option>
+          <option value="">-- Select Category --</option>
           {% for cat in categories %}
             <option value="{{ cat.category_name }}">{{ cat.category_name }}</option>
           {% endfor %}
@@ -134,9 +134,16 @@
         <input type="text" name="iphone_storage" id="iphone_storage" placeholder="Enter Storage" class="form-control">
       </div>
 
+      <!-- Purchase Price -->
       <div class="col-md-6">
-        <label for="iphone_price">Price</label>
-        <input type="number" name="iphone_price" id="iphone_price" placeholder="Enter Price" class="form-control">
+        <label for="iphone_purchase_price">Purchase Price</label>
+        <input type="number" name="iphone_purchase_price" id="iphone_purchase_price" placeholder="Enter Purchase Price" class="form-control">
+      </div>
+
+      <!-- Sale Price -->
+      <div class="col-md-6">
+        <label for="iphone_sale_price">Sale Price</label>
+        <input type="number" name="iphone_sale_price" id="iphone_sale_price" placeholder="Enter Sale Price" class="form-control">
       </div>
 
       <div class="col-md-6">
@@ -159,12 +166,13 @@
         <input type="text" name="iphone_battery_health" id="iphone_battery_health" placeholder="Enter Battery Health %" class="form-control">
       </div>
 
+      <!-- Serial Number and Display Size side by side -->
       <div class="col-md-6">
         <label for="iphone_serial">Serial Number</label>
         <input type="text" name="iphone_serial" id="iphone_serial" placeholder="Enter Serial Number" class="form-control">
       </div>
 
-      <div class="col-md-12">
+      <div class="col-md-6">
         <label for="iphone_display_size">Display Size</label>
         <input type="text" name="iphone_display_size" id="iphone_display_size" placeholder="Enter Display Size" class="form-control">
       </div>
@@ -178,6 +186,14 @@
     </div>
   </form>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  // Auto-hide flash messages after 3 seconds
+  document.addEventListener("DOMContentLoaded", () => {
+    const flashes = document.querySelectorAll('.alert');
+    flashes.forEach(flash => setTimeout(() => flash.remove(), 3000));
+  });
+</script>
 
 </body>
 </html>

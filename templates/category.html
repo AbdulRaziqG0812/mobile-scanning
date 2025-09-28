@@ -145,5 +145,12 @@
 
     <a href="{{ url_for('category_list') }}" class="back-btn">⬅ Back to List</a>
   </div>
+  <script>
+    // Auto-hide flash messages after 3 seconds
+    document.addEventListener("DOMContentLoaded", () => {
+      const flashes = document.querySelectorAll('.flash');
+      flashes.forEach(flash => setTimeout(() => flash.remove(), 3000));
+    });
+  </script>
 </body>
 </html>

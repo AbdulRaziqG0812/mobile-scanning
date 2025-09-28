@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Billing — Mobile Shop</title>
+
+<style>
+  :root{
+    --primary:#0b63d6;
+    --muted:#6b7280;
+    --bg:#f5f8ff;
+    --card:#ffffff;
+    --success:#16a34a;
+    --danger:#ef4444;
+    --radius:10px;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family: "Inter", "Segoe UI", Tahoma, sans-serif;
+    background:var(--bg);
+    color:#0f172a;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .container{
+    max-width:1100px;
+    margin:28px auto;
+    padding:22px;
+    background:var(--card);
+    border-radius:var(--radius);
+    box-shadow:0 10px 30px rgba(2,6,23,0.08);
+  }
+
+  header.top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    margin-bottom:18px;
+  }
+  header.top h1{
+    margin:0;
+    font-size:20px;
+    color:var(--primary);
+  }
+  header.top .actions { display:flex; gap:10px; align-items:center; }
+
+  .btn{
+    background:var(--primary);
+    color:#fff;
+    border:none;
+    padding:10px 14px;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:600;
+  }
+  .btn.ghost{
+    background:transparent;
+    color:var(--primary);
+    border:1px solid rgba(11,99,214,0.12);
+  }
+  .btn.danger{ background:var(--danger); }
+
+  /* CUSTOMER INFO */
+  .customer-row{
+    display:flex;
+    gap:14px;
+    align-items:flex-end;
+    flex-wrap:wrap;
+    margin-bottom:18px;
+  }
+  .field{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  .field label{ font-size:13px; color:var(--muted); font-weight:600; }
+  .field select, .field input{
+    padding:9px 12px;
+    border-radius:8px;
+    border:1px solid #e6eefc;
+    min-width:180px;
+    background:#fff;
+    outline:none;
+    transition: box-shadow .15s;
+  }
+  .field input[readonly]{ background:#f7f9ff; color:#243b53; }
+
+  /* PRODUCTS TABLE */
+  .products-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:6px;
+    margin-bottom:8px;
+  }
+  .table-wrapper{
+    border-radius:10px;
+    overflow:auto;
+    border:1px solid rgba(11,99,214,0.06);
+    max-height:360px;
+  }
+
+  table{
+    width:100%;
+    border-collapse:collapse;
+    table-layout:fixed;
+    min-width:940px; /* Adjusted for removed battery column */
+  }
+  thead th{
+    position:sticky;
+    top:0;
+    background:var(--primary);
+    color:white;
+    text-align:left;
+    padding:12px 14px;
+    font-weight:700;
+    font-size:13px;
+  }
+  tbody td{
+    padding:10px 12px;
+    border-bottom:1px solid #f1f5f9;
+    vertical-align:middle;
+    font-size:14px;
+  }
+
+  .td-center{ text-align:center; }
+  .td-right{ text-align:right; }
+
+  .input-compact{
+    width:100%;
+    padding:6px 8px;
+    border:1px solid #e6eefc;
+    border-radius:6px;
+    background:#fff;
+    font-size:13px;
+  }
+  .readonly{ background:#fbfdff; }
+
+  .small{ font-size:13px; color:var(--muted); }
+
+  .bottom-row{
+    display:flex;
+    justify-content:space-between;
+    gap:20px;
+    align-items:center;
+    margin-top:18px;
+    flex-wrap:wrap;
+  }
+  .totals-card{
+    margin-left:auto;
+    min-width:320px;
+    background:#f1f7ff;
+    padding:14px;
+    border-radius:10px;
+    border:1px solid rgba(11,99,214,0.06);
+  }
+  .totals-row{ display:flex; justify-content:space-between; padding:6px 0; font-weight:600; }
+  .totals-row.small{ font-weight:500; color:var(--muted); }
+
+  .form-actions{ text-align:right; margin-top:16px; }
+
+  .icon-btn{
+    background:transparent;
+    border:none;
+    cursor:pointer;
+    padding:6px;
+    border-radius:6px;
+  }
+
+  /* Modal */
+  .modal{
+    position:fixed;
+    inset:0;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:90;
+  }
+  .modal.show{ display:flex; }
+  .modal-backdrop{
+    position:absolute; inset:0; background:rgba(3,7,18,0.45);
+    backdrop-filter: blur(1px);
+  }
+  .modal-card{
+    position:relative;
+    z-index:95;
+    width:640px;
+    max-width:94%;
+    background:var(--card);
+    border-radius:12px;
+    padding:18px;
+    box-shadow:0 20px 60px rgba(2,6,23,0.35);
+  }
+  .modal-grid{ display:flex; gap:12px; flex-wrap:wrap; }
+  .modal-grid .field{ flex:1; min-width:160px; }
+  .stock-badge{
+    font-size:13px;
+    padding:6px 10px;
+    border-radius:8px;
+    display:inline-block;
+    margin-top:6px;
+    background:#f8fafc;
+    color:#083344;
+    border:1px solid rgba(2,6,23,0.06);
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header class="top">
+    <h1>📋 Billing — Mobile Shop</h1>
+    <div class="actions">
+      <button type="button" class="btn ghost" onclick="openProductModal()">+ Add Product</button>
+      <button type="button" class="btn" onclick="submitForm()">💾 Save & Print</button>
+    </div>
+  </header>
+
+  <form id="billingForm" method="POST">
+    <!-- CUSTOMER -->
+    <div class="customer-row">
+      <div class="field">
+        <label>Customer</label>
+        <select name="customer_id" onchange="fetchCustomer(this.value)" required>
+          <option value="">— Select customer —</option>
+          {% for c in customers %}
+            <option value="{{ c.customer_id }}">{{ c.name }} — {{ c.mobile }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label>Name</label>
+        <input type="text" id="customer_name" readonly class="input-compact readonly" />
+      </div>
+      <div class="field">
+        <label>Mobile</label>
+        <input type="text" id="customer_mobile" readonly class="input-compact readonly" />
+      </div>
+      <div class="field">
+        <label>Contact</label>
+        <input type="text" id="customer_contact" readonly class="input-compact readonly" />
+      </div>
+      <div class="field">
+        <label>Address</label>
+        <input type="text" id="customer_address" readonly class="input-compact readonly" />
+      </div>
+      <div class="field">
+        <label>Invoice #</label>
+        <input type="text" id="invoice_no" value="Auto" readonly class="input-compact readonly" />
+      </div>
+    </div>
+
+    <!-- PRODUCTS -->
+    <div class="products-header">
+      <div><strong>Products</strong> <span class="small"> — add items using the blue button</span></div>
+      <div class="small">Click <em>Remove</em> to delete a line</div>
+    </div>
+
+    <div class="table-wrapper" id="tableWrapper">
+      <table id="productTable">
+        <thead>
+          <tr>
+            <th style="width:18%">Product</th>
+            <th style="width:12%">Serial</th>
+            <th style="width:12%">IMEI</th>
+            <th style="width:12%">Color</th>
+            <th style="width:12%">Price</th>
+            <th style="width:8%" class="td-center">Qty</th>
+            <th style="width:12%" class="td-right">Amount</th>
+            <th style="width:6%" class="td-center"> </th>
+          </tr>
+        </thead>
+        <tbody id="productBody"></tbody>
+      </table>
+    </div>
+
+    <!-- TOTALS -->
+    <div class="bottom-row">
+      <div class="small">Tip: use the <strong>Add Product</strong> button — table scrolls so the form won't jump.</div>
+      <div class="totals-card">
+        <div class="totals-row small"><div>Subtotal</div><div>Rs. <span id="subtotal_view">0.00</span></div></div>
+        <div class="totals-row">
+          <div>Discount</div>
+          <div><input type="number" id="discount" name="discount" value="0" min="0" class="input-compact" style="width:120px;" onchange="calcTotal()"></div>
+        </div>
+        <div class="totals-row" style="font-size:18px"><div><strong>Net Total</strong></div><div><strong>Rs. <span id="net_view">0.00</span></strong></div></div>
+        <input type="hidden" id="subtotal" name="subtotal" value="0">
+        <input type="hidden" id="net_total" name="net_total" value="0">
+      </div>
+    </div>
+  </form>
+</div>
+
+<!-- PRODUCT MODAL -->
+<div class="modal" id="productModal">
+  <div class="modal-backdrop" onclick="closeProductModal()"></div>
+  <div class="modal-card">
+    <h3 style="margin:0 0 10px 0; color:var(--primary)">Add product</h3>
+    <div class="modal-grid" style="margin-bottom:12px;">
+      <div class="field">
+        <label>Select product</label>
+        <select id="modal_product" onchange="modalFetchProduct(this.value)">
+          <option value="">— Select product —</option>
+          {% for p in products %}
+            <option value="{{ p.product_id }}">{{ p.iphone_model }} ({{ p.iphone_storage }}) — Rs {{ p.iphone_sale_price }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label>Price</label>
+        <input id="modal_price" readonly class="input-compact readonly" />
+      </div>
+      <div class="field">
+        <label>Stock</label>
+        <div id="modal_stock" class="stock-badge">—</div>
+      </div>
+      <div class="field">
+        <label>Qty</label>
+        <input id="modal_qty" type="number" min="1" value="1" class="input-compact" />
+      </div>
+    </div>
+    <div style="display:flex; gap:8px; justify-content:flex-end;">
+      <button class="btn ghost" onclick="closeProductModal()" type="button">Cancel</button>
+      <button id="modalAddBtn" class="btn" onclick="addProductFromModal()" type="button">Add to bill</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function fetchCustomer(id){
+  if(!id){
+    document.getElementById('customer_name').value='';
+    document.getElementById('customer_mobile').value='';
+    document.getElementById('customer_contact').value='';
+    document.getElementById('customer_address').value='';
+    return;
+  }
+  fetch('/get_customer/' + id)
+    .then(r=>r.json())
+    .then(data=>{
+      document.getElementById('customer_name').value = data.name || '';
+      document.getElementById('customer_mobile').value = data.mobile || '';
+      document.getElementById('customer_contact').value = data.Contact || '';
+      document.getElementById('customer_address').value = data.address || '';
+    });
+}
+
+function openProductModal(){ document.getElementById('productModal').classList.add('show'); }
+function closeProductModal(){ document.getElementById('productModal').classList.remove('show'); }
+
+function modalFetchProduct(id){
+  if(!id){ return; }
+  fetch('/get_product/' + id)
+    .then(r=>r.json())
+    .then(data=>{
+      document.getElementById('modal_price').value = data.iphone_sale_price || '';
+      document.getElementById('modal_stock').textContent = "Stock: " + (data.iphone_stock || 0);
+    });
+}
+
+function addProductFromModal(){
+  const pid=document.getElementById('modal_product').value;
+  const qty=parseInt(document.getElementById('modal_qty').value)||1;
+  if(!pid){ alert('Select product'); return; }
+  fetch('/get_product/' + pid)
+    .then(r=>r.json())
+    .then(data=>{
+      const tbody=document.getElementById('productBody');
+      const tr=document.createElement('tr');
+      tr.innerHTML=`
+        <td><div style="font-weight:700">${data.iphone_model} / ${data.iphone_storage}</div>
+          <input type="hidden" name="product_id[]" value="${data.product_id}">
+        </td>
+        <td>${data.iphone_serial||''}<input type="hidden" name="serial[]" value="${data.iphone_serial||''}"></td>
+        <td>${data.iphone_imei||''}<input type="hidden" name="imei[]" value="${data.iphone_imei||''}"></td>
+        <td>${data.iphone_color||''}<input type="hidden" name="color[]" value="${data.iphone_color||''}"></td>
+        <td><input type="number" name="price[]" class="input-compact" value="${data.iphone_sale_price}" readonly></td>
+        <td class="td-center"><input type="number" name="qty[]" class="input-compact" min="1" value="${qty}" onchange="rowQtyChanged(this)" style="width:72px"></td>
+        <td class="td-right"><input type="text" name="amount[]" class="input-compact" value="${(qty*data.iphone_sale_price).toFixed(2)}" readonly style="text-align:right"></td>
+        <td class="td-center"><button type="button" class="icon-btn" onclick="removeRow(this)">❌</button></td>`;
+      tbody.appendChild(tr);
+      closeProductModal();
+      calcTotal();
+    });
+}
+
+function removeRow(btn){ btn.closest('tr').remove(); calcTotal(); }
+function rowQtyChanged(input){
+  const tr=input.closest('tr');
+  const price=parseFloat(tr.querySelector('input[name="price[]"]').value)||0;
+  const qty=parseFloat(input.value)||0;
+  tr.querySelector('input[name="amount[]"]').value=(price*qty).toFixed(2);
+  calcTotal();
+}
+
+function calcTotal(){
+  let subtotal=0;
+  document.querySelectorAll('input[name="amount[]"]').forEach(a=>subtotal+=parseFloat(a.value||0));
+  const discount=parseFloat(document.getElementById('discount').value||0);
+  const net=Math.max(0,subtotal-discount);
+  document.getElementById('subtotal').value=subtotal.toFixed(2);
+  document.getElementById('subtotal_view').textContent=subtotal.toFixed(2);
+  document.getElementById('net_total').value=net.toFixed(2);
+  document.getElementById('net_view').textContent=net.toFixed(2);
+}
+
+function submitForm(){
+  if(document.querySelectorAll('input[name="product_id[]"]').length===0){
+    alert("Please add at least one product."); return;
+  }
+  document.getElementById('billingForm').submit();
+}
+// Auto-hide flash messages after 3 seconds
+    document.addEventListener("DOMContentLoaded", () => {
+      const alerts = document.querySelectorAll('.alert');
+      alerts.forEach(alert => setTimeout(() => alert.remove(), 3000));
+    });
+</script>
+
+</body>
+</html>

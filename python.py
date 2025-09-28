@@ -1,4 +1,5 @@
-from flask import Flask, flash, request, render_template, redirect, url_for
+from datetime import datetime
+from flask import Flask, flash, jsonify, request, render_template, redirect, url_for
 import mysql.connector
 # from werkzeug import Response
 
@@ -18,9 +19,42 @@ def home():
     return render_template('loginpage.html')
 
 # route for homepage    
-@app.route('/homepage' , methods=['GET', 'POST'])
+
+@app.route('/homepage', methods=['GET', 'POST'])
 def homepage(): 
-    return render_template('homepage.html')
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
+
+    # Total Products
+    cursor.execute("SELECT COUNT(*) AS total_products FROM iphone_products")
+    total_products = cursor.fetchone()['total_products']
+
+    # Total Customers
+    cursor.execute("SELECT COUNT(*) AS total_customers FROM customers")
+    total_customers = cursor.fetchone()['total_customers']
+
+    # Monthly Sales and Revenue
+    now = datetime.now()
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    cursor.execute("""
+        SELECT COUNT(*) AS monthly_sales, IFNULL(SUM(net_total),0) AS monthly_revenue
+        FROM bills
+        WHERE bill_date >= %s
+    """, (month_start,))
+    sales_data = cursor.fetchone()
+    monthly_sales = sales_data['monthly_sales'] or 0
+    monthly_revenue = sales_data['monthly_revenue'] or 0
+
+    cursor.close()
+    conn.close()
+
+    return render_template(
+        "homepage.html",
+        total_products=total_products,
+        total_customers=total_customers,
+        monthly_sales=monthly_sales,
+        monthly_revenue=monthly_revenue
+    )
 
 # route for loginpage
 
@@ -41,7 +75,6 @@ def loginpage():
             existing_user = cursor.fetchone()
 
             if existing_user:
-                flash("Login successful!", "success")
                 return redirect(url_for('homepage'))
             else:
                 flash("Invalid username or password!", "error")
@@ -167,6 +200,7 @@ def delete_category(id):
 
 # ✅ Full Product Add Route (All Categories)
 
+# ✅ Product Add Route
 @app.route('/product', methods=['GET', 'POST'])
 def product():
     conn = None
@@ -177,17 +211,17 @@ def product():
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor(dictionary=True)
 
-        # Fetch categories for dropdown
+        # ✅ Fetch categories for dropdown
         cursor.execute("SELECT category_name FROM categories")
         categories = cursor.fetchall()
 
+        # ✅ Handle product form submission
         if request.method == "POST":
             category = request.form.get('category')
-
-            # Fetch all form fields
             iphone_model = request.form.get('iphone_model')
             iphone_storage = request.form.get('iphone_storage')
-            iphone_price = request.form.get('iphone_price')
+            iphone_purchase_price = request.form.get('iphone_purchase_price')
+            iphone_sale_price = request.form.get('iphone_sale_price')
             iphone_imei = request.form.get('iphone_imei')
             iphone_color = request.form.get('iphone_color')
             iphone_stock = request.form.get('iphone_stock')
@@ -195,25 +229,27 @@ def product():
             iphone_serial = request.form.get('iphone_serial')
             iphone_display_size = request.form.get('iphone_display_size')
 
-            # Insert into products table
+            # ✅ Insert data into table
             cursor.execute("""
                 INSERT INTO iphone_products (
-                    category, iphone_model, iphone_storage, iphone_price,
-                    iphone_imei, iphone_color, iphone_stock, iphone_battery_health,
-                    iphone_serial, iphone_display_size
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    category, iphone_model, iphone_storage, 
+                    iphone_purchase_price, iphone_sale_price,
+                    iphone_imei, iphone_color, iphone_stock, 
+                    iphone_battery_health, iphone_serial, iphone_display_size
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """, (
-                category, iphone_model, iphone_storage, iphone_price,
-                iphone_imei, iphone_color, iphone_stock, iphone_battery_health,
-                iphone_serial, iphone_display_size
+                category, iphone_model, iphone_storage,
+                iphone_purchase_price, iphone_sale_price,
+                iphone_imei, iphone_color, iphone_stock,
+                iphone_battery_health, iphone_serial, iphone_display_size
             ))
 
             conn.commit()
-            flash(f" product added successfully!", "success")
-            return redirect(url_for('product'))  # ✅ Redirect after submit
+            flash("✅ Product added successfully!", "success")
+            return redirect(url_for('product'))  # ✅ Redirect to product list
 
     except Exception as e:
-        flash(f"An error occurred: {e}", "error")
+        flash(f"⚠️ Error adding product: {e}", "error")
 
     finally:
         if cursor:
@@ -224,16 +260,52 @@ def product():
     return render_template('product.html', categories=categories)
 
 
-# Product list route
+# ✅ Product List Route
 @app.route('/product_list')
 def product_list():
-    conn = mysql.connector.connect(**db_config)
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM iphone_products ORDER BY product_id DESC")
-    products = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    return render_template('product_list.html', products=products)
+    conn = None
+    cursor = None
+    products = []
+    total_purchase = 0
+    total_sale = 0
+
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor(dictionary=True)
+
+        # ✅ Auto delete products with zero or negative stock
+        cursor.execute("DELETE FROM iphone_products WHERE iphone_stock <= 0")
+        conn.commit()
+
+        # ✅ Fetch all products
+        cursor.execute("SELECT * FROM iphone_products ORDER BY product_id DESC")
+        products = cursor.fetchall()
+
+        # ✅ Calculate totals
+        cursor.execute("""
+            SELECT 
+                IFNULL(SUM(iphone_purchase_price), 0) AS total_purchase,
+                IFNULL(SUM(iphone_sale_price), 0) AS total_sale
+            FROM iphone_products
+        """)
+        totals = cursor.fetchone()
+        total_purchase = totals["total_purchase"]
+        total_sale = totals["total_sale"]
+
+    except Exception as e:
+        flash(f"⚠️ Error loading product list: {e}", "error")
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+    return render_template(
+        'product_list.html',
+        products=products,
+        total_purchase=total_purchase,
+        total_sale=total_sale
+    )
 
 # ✅ Edit Product
 
@@ -247,19 +319,24 @@ def edit_product(product_id):
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor(dictionary=True)
 
-        # Fetch categories for dropdown
+        # ✅ Fetch categories for dropdown
         cursor.execute("SELECT category_name FROM categories")
         categories = cursor.fetchall()
 
-        # Fetch product details
+        # ✅ Fetch product details
         cursor.execute("SELECT * FROM iphone_products WHERE product_id=%s", (product_id,))
         product = cursor.fetchone()
+
+        if not product:
+            flash("⚠️ Product not found!", "error")
+            return redirect(url_for('product'))
 
         if request.method == "POST":
             category = request.form.get('category')
             iphone_model = request.form.get('iphone_model')
             iphone_storage = request.form.get('iphone_storage')
-            iphone_price = request.form.get('iphone_price')
+            iphone_purchase_price = request.form.get('iphone_purchase_price')
+            iphone_sale_price = request.form.get('iphone_price')
             iphone_imei = request.form.get('iphone_imei')
             iphone_color = request.form.get('iphone_color')
             iphone_stock = request.form.get('iphone_stock')
@@ -267,25 +344,28 @@ def edit_product(product_id):
             iphone_serial = request.form.get('iphone_serial')
             iphone_display_size = request.form.get('iphone_display_size')
 
-            # Update product in database
+            # ✅ Update product in database
             cursor.execute("""
                 UPDATE iphone_products SET
-                    category=%s, iphone_model=%s, iphone_storage=%s, iphone_price=%s,
-                    iphone_imei=%s, iphone_color=%s, iphone_stock=%s, iphone_battery_health=%s,
-                    iphone_serial=%s, iphone_display_size=%s
+                    category=%s, iphone_model=%s, iphone_storage=%s,
+                    iphone_purchase_price=%s, iphone_sale_price=%s,
+                    iphone_imei=%s, iphone_color=%s, iphone_stock=%s,
+                    iphone_battery_health=%s, iphone_serial=%s, iphone_display_size=%s
                 WHERE product_id=%s
             """, (
-                category, iphone_model, iphone_storage, iphone_price,
-                iphone_imei, iphone_color, iphone_stock, iphone_battery_health,
-                iphone_serial, iphone_display_size, product_id
+                category, iphone_model, iphone_storage,
+                iphone_purchase_price, iphone_sale_price,
+                iphone_imei, iphone_color, iphone_stock,
+                iphone_battery_health, iphone_serial, iphone_display_size,
+                product_id
             ))
 
             conn.commit()
             flash("✅ Product updated successfully!", "success")
-            return redirect(url_for('product_list'))  # Redirect to product list/add page
+            return redirect(url_for('product_list'))  # Go back to product page
 
     except Exception as e:
-        flash(f"An error occurred: {e}", "error")
+        flash(f"⚠️ An error occurred: {e}", "error")
 
     finally:
         if cursor:
@@ -294,6 +374,7 @@ def edit_product(product_id):
             conn.close()
 
     return render_template('edit_product.html', product=product, categories=categories)
+
 
 # ✅ Delete Product
 @app.route('/delete_product/<int:product_id>', methods=['POST'])
@@ -326,8 +407,9 @@ def search():
     params = []
 
     if keyword:
-        query += " AND (category LIKE %s OR iphone_model LIKE %s)"
-        params.extend([f"%{keyword}%", f"%{keyword}%"])
+        # ✅ Search by Category, Model, or IMEI
+        query += " AND (category LIKE %s OR iphone_model LIKE %s OR iphone_imei LIKE %s)"
+        params.extend([f"%{keyword}%", f"%{keyword}%", f"%{keyword}%"])
 
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor(dictionary=True)
@@ -337,6 +419,7 @@ def search():
     conn.close()
 
     return render_template("product_list.html", products=products, keyword=keyword)
+
 
 # ✅ Customer Add Route
 @app.route("/customer", methods=["GET", "POST"])
@@ -416,6 +499,294 @@ def delete_customer(id):
     flash("Customer deleted successfully!", "success")
     return redirect(url_for("customer_list"))
 
+# ✅ Search Customer by Mobile or Contact
+@app.route('/search_customer', methods=['GET'])
+def search_customer():
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
+    
+    search = request.args.get('search', '').strip()
+    
+    if search:
+        query = """
+            SELECT * FROM customers
+            WHERE mobile LIKE %s OR Contact LIKE %s
+            ORDER BY customer_id DESC
+        """
+        like_search = f"%{search}%"
+        cursor.execute(query, (like_search, like_search))
+    else:
+        query = "SELECT * FROM customers ORDER BY customer_id DESC"
+        cursor.execute(query)
+    
+    customers = cursor.fetchall()
+    
+    cursor.close()
+    conn.close()
+    
+    return render_template('customer_list.html', customers=customers)
+
+# ---------- GET CUSTOMER ----------
+@app.route("/get_customer/<int:id>")
+def get_customer(id):
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT customer_id, name, mobile, Contact, address FROM customers WHERE customer_id=%s", (id,))
+    customer = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    return jsonify(customer)
+
+# ---------- GET PRODUCT ----------
+@app.route("/get_product/<int:id>")
+def get_product(id):
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("""
+        SELECT product_id, iphone_model, iphone_storage, iphone_sale_price, iphone_imei,
+               iphone_color, iphone_stock, iphone_serial
+        FROM iphone_products
+        WHERE product_id=%s
+    """, (id,))
+    product = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    return jsonify(product)
+
+# ---------- BILLING FORM ----------
+@app.route("/billing", methods=["GET", "POST"])
+def billing():
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
+
+    # Fetch customers and products
+    cursor.execute("SELECT * FROM customers")
+    customers = cursor.fetchall()
+    cursor.execute("SELECT * FROM iphone_products WHERE iphone_stock > 0")
+    products = cursor.fetchall()
+
+    if request.method == "POST":
+        customer_id = request.form["customer_id"]
+        subtotal = request.form["subtotal"]
+        discount = request.form["discount"]
+        net_total = request.form["net_total"]
+
+        # Insert bill
+        cursor.execute("""
+            INSERT INTO bills (customer_id, subtotal, discount, net_total)
+            VALUES (%s,%s,%s,%s)
+        """, (customer_id, subtotal, discount, net_total))
+        bill_id = cursor.lastrowid
+
+        # Insert items into bill_items
+        product_ids = request.form.getlist("product_id[]")
+        qtys = request.form.getlist("qty[]")
+        amounts = request.form.getlist("amount[]")
+
+        for i in range(len(product_ids)):
+            pid = int(product_ids[i])
+            qty = int(qtys[i])
+            amount = float(amounts[i])
+
+            cursor.execute("""
+                INSERT INTO bill_items (bill_id, product_id, product_model, product_storage,
+                                        product_price, product_serial, product_imei, product_color,
+                                        qty, amount)
+                SELECT %s, product_id, iphone_model, iphone_storage, iphone_sale_price,
+                       iphone_serial, iphone_imei, iphone_color, %s, %s
+                FROM iphone_products WHERE product_id=%s
+            """, (bill_id, qty, amount, pid))
+
+            # ✅ Update stock safely, don't delete record even if stock goes 0
+            cursor.execute("""
+                UPDATE iphone_products
+                SET iphone_stock = GREATEST(iphone_stock - %s, 0)
+                WHERE product_id=%s
+            """, (qty, pid))
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+        flash("Bill created successfully! You can now print the invoice.", "success")
+        return redirect(url_for("invoice", bill_id=bill_id))
+
+    cursor.close()
+    conn.close()
+    return render_template("billing.html", customers=customers, products=products)
+
+# ---------- BILLING LIST ----------
+@app.route("/billing_list")
+def billing_list():
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
+
+    # Fetch bills along with customer info from customers table
+    cursor.execute("""
+        SELECT b.bill_id, b.bill_date,
+               c.name AS customer_name,
+               c.mobile AS customer_mobile,
+               c.Contact AS customer_contact,
+               c.address AS customer_address,
+               b.subtotal, b.discount, b.net_total
+        FROM bills b
+        JOIN customers c ON b.customer_id = c.customer_id
+        ORDER BY b.bill_date DESC
+        LIMIT 100
+    """)
+    bills = cursor.fetchall()
+
+    # Fetch bill items for each bill
+    bill_items = {}
+    for bill in bills:
+        cursor.execute("""
+            SELECT bi.qty, bi.product_price AS price, bi.amount,
+                   bi.product_model AS iphone_model,
+                   bi.product_storage AS iphone_storage,
+                   bi.product_color AS iphone_color,
+                   bi.product_imei AS iphone_imei,
+                   bi.product_serial AS iphone_serial
+            FROM bill_items bi
+            WHERE bi.bill_id=%s
+        """, (bill['bill_id'],))
+        bill_items[bill['bill_id']] = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+    return render_template("billing_list.html", bills=bills, bill_items=bill_items)
+
+# ---------- DELETE BILL ----------
+@app.route('/delete_bill/<int:bill_id>', methods=['GET'])
+def delete_bill(bill_id):
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor()
+    # Delete bill items first
+    cursor.execute("DELETE FROM bill_items WHERE bill_id=%s", (bill_id,))
+    # Then delete the bill
+    cursor.execute("DELETE FROM bills WHERE bill_id=%s", (bill_id,))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    flash("Bill deleted successfully!", "success")
+    return redirect(url_for('billing_list'))
+
+# ---------- SEARCH BILL ----------
+@app.route("/search_bill")
+def search_bill():
+    keyword = request.args.get("q", "").strip()
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
+
+    # Step 1: Get all bill_ids that match the search keyword in bill_items
+    if keyword:
+        cursor.execute("""
+            SELECT DISTINCT b.bill_id
+            FROM bills b
+            JOIN bill_items bi ON bi.bill_id = b.bill_id
+            WHERE bi.product_model LIKE %s OR bi.product_imei LIKE %s
+        """, (f"%{keyword}%", f"%{keyword}%"))
+        bill_ids = [row['bill_id'] for row in cursor.fetchall()]
+        if bill_ids:
+            format_ids = ','.join(['%s']*len(bill_ids))
+            # Step 2: Fetch bills with customers
+            cursor.execute(f"""
+                SELECT b.*, c.name AS customer_name, c.mobile AS customer_mobile,
+                       c.contact AS customer_contact, c.address AS customer_address
+                FROM bills b
+                JOIN customers c ON b.customer_id = c.customer_id
+                WHERE b.bill_id IN ({format_ids})
+                ORDER BY b.bill_date DESC
+            """, bill_ids)
+            bills = cursor.fetchall()
+        else:
+            bills = []
+    else:
+        # Show all bills
+        cursor.execute("""
+            SELECT b.*, c.name AS customer_name, c.mobile AS customer_mobile,
+                   c.contact AS customer_contact, c.address AS customer_address
+            FROM bills b
+            JOIN customers c ON b.customer_id = c.customer_id
+            ORDER BY b.bill_date DESC
+        """)
+        bills = cursor.fetchall()
+
+    # Step 3: Fetch items for each bill
+    bill_items = {}
+    for bill in bills:
+        cursor.execute("SELECT * FROM bill_items WHERE bill_id = %s", (bill['bill_id'],))
+        bill_items[bill['bill_id']] = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+    return render_template("billing_list.html", bills=bills, bill_items=bill_items, keyword=keyword)
+
+
+# ---------- INVOICE ----------
+@app.route("/invoice/<int:bill_id>")
+def invoice(bill_id):
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
+
+    # Get bill info
+    cursor.execute("SELECT * FROM bills WHERE bill_id=%s", (bill_id,))
+    bill = cursor.fetchone()
+
+    # Get customer info
+    cursor.execute("""
+        SELECT c.name AS customer_name, c.mobile AS customer_mobile, c.contact AS customer_contact, c.address AS customer_address
+        FROM bills b
+        JOIN customers c ON b.customer_id = c.customer_id
+        WHERE b.bill_id=%s
+    """, (bill_id,))
+    customer = cursor.fetchone()
+
+    # Get bill items
+    cursor.execute("SELECT * FROM bill_items WHERE bill_id=%s", (bill_id,))
+    items = cursor.fetchall()
+
+    # Get company info
+    cursor.execute("SELECT * FROM company_settings LIMIT 1")
+    company = cursor.fetchone()
+
+    cursor.close()
+    conn.close()
+
+    return render_template("invoice.html", bill=bill, customer=customer, items=items, company=company)
+
+
+
+# create company route
+
+@app.route("/company", methods=["GET", "POST"])
+def company():
+    if request.method == "POST":
+        # Get form data
+        name = request.form.get("name", "")
+        address = request.form.get("address", "")
+        phone = request.form.get("phone", "")
+        email = request.form.get("email", "")
+        terms = request.form.get("terms", "")
+
+        # Connect to DB
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+
+        # Insert new company settings
+        cursor.execute("""
+            INSERT INTO company_settings (name, address, phone, email, terms)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (name, address, phone, email, terms))
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        flash("Company settings saved successfully!", "success")
+        return redirect(url_for("company"))
+
+    # For GET request, just show empty form
+    return render_template("company.html", company={})
+
 if __name__ == '__main__':
-    app.run(host="192.168.100.23", debug=True, port=5500)
+    app.run(host="192.168.100.23", debug=True, port=5600)
     # app.run(debug=True)

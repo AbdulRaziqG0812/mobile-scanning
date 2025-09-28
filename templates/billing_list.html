@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Billing List — Mobile Shop</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+body { 
+    font-family: "Segoe UI", Tahoma, sans-serif; 
+    background: #f4f6f9; 
+    margin: 0; 
+    padding: 20px; 
+    color: #333; 
+    overflow-y: auto; 
+}
+h1 { 
+    text-align: center; 
+    color: #004aad; 
+    margin-bottom: 30px; 
+    font-size: 34px; 
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    border-bottom: 3px solid #004aad;
+    display: inline-block;
+    padding-bottom: 8px;
+}
+.table-container {
+    width: 100%;
+    overflow-x: auto;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    background: #fff;
+}
+table { 
+    width: 100%;
+    min-width: 1500px;
+    border-collapse: collapse; 
+    background: #fff; 
+}
+th, td { 
+    padding: 12px 14px; 
+    text-align: center; 
+    font-size: 14px; 
+    white-space: nowrap;
+    border: 1px solid #d1d9e6;
+}
+th { 
+    background: #007bff; 
+    color: white; 
+    font-weight: 600; 
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    font-size: 13px;
+}
+tr:nth-child(even) { background: #f9f9f9; }
+tr:hover { background: #eef6ff; transition: 0.2s; }
+
+/* Buttons */
+.btn { 
+    padding: 7px 12px; 
+    border-radius: 8px; 
+    color: white; 
+    font-size: 13px; 
+    text-decoration: none; 
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.25s ease;
+    border: none;
+    cursor: pointer;
+}
+.btn-primary { background: #007bff; }
+.btn-danger { background: #dc3545; }
+.btn-success { background: #28a745; }
+.btn-back { background: #17a2b8; }
+.btn-filter { background: #6c63ff; }
+
+.btn:hover { 
+    transform: translateY(-2px); 
+    box-shadow: 0 3px 8px rgba(0,0,0,0.2); 
+}
+
+.alert { 
+    padding: 12px 15px; 
+    margin: 15px auto; 
+    width: 95%; 
+    border-radius: 8px; 
+    font-weight: 500; 
+    text-align: center; 
+    color: #fff;
+    background: #007bff;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.1); 
+}
+
+.top-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.search-box form {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    background: #fff;
+    padding: 8px 12px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.search-box input {
+    padding: 8px 12px;
+    border: 1.5px solid #d0d7e2;
+    border-radius: 6px;
+    background: #fafbff;
+    font-size: 14px;
+    min-width: 220px;
+}
+.search-box input:focus {
+    border-color: #6c63ff;
+    box-shadow: 0 0 0 3px rgba(108,99,255,0.15);
+    background: #fff;
+    outline: none;
+}
+
+.action-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
+
+#pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+.page-btn {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.page-btn:hover { background: #0056b3; }
+.page-btn.active {
+  background: #28a745;
+  font-weight: bold;
+  transform: scale(1.05);
+}
+.page-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+</style>
+</head>
+<body>
+
+<div style="text-align:center;">
+  <h1>🧾 Billing List</h1>
+</div>
+
+<!-- Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+  {% for category, message in messages %}
+    <div class="alert"><i class="fa-solid fa-info-circle"></i> {{ message }}</div>
+  {% endfor %}
+{% endif %}
+{% endwith %}
+
+<!-- Top Actions -->
+<div class="top-actions">
+  <div class="search-box">
+    <form method="GET" action="{{ url_for('search_bill') }}">
+      <input type="text" name="q" placeholder="Search by Model or IMEI..." value="{{ keyword }}">
+      <button type="submit" class="btn btn-filter"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
+    </form>
+  </div>
+
+  <div class="action-buttons">
+    <a href="{{ url_for('billing') }}" class="btn btn-success"><i class="fa-solid fa-plus"></i> Add Bill</a>
+    <a href="{{ url_for('homepage') }}" class="btn btn-back"><i class="fa-solid fa-house"></i> Home</a>
+  </div>
+</div>
+
+<!-- Billing Table -->
+<div class="table-container">
+  <table class="paginated-table">
+    <thead>
+      <tr>
+        <th>Bill ID</th>
+        <th>Bill Date</th>
+        <th>Customer Name</th>
+        <th>Mobile</th>
+        <th>Contact</th>
+        <th>Address</th>
+        <th>Product Model</th>
+        <th>Storage</th>
+        <th>Color</th>
+        <th>IMEI</th>
+        <th>Serial</th>
+        <th>Qty</th>
+        <th>Subtotal</th>
+        <th>Discount</th>
+        <th>Net Total</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for bill in bills %}
+        {% for item in bill_items[bill.bill_id] %}
+        <tr>
+          <td>{{ bill.bill_id }}</td>
+          <td>{{ bill.bill_date.strftime('%Y-%m-%d %H:%M') }}</td>
+          <td>{{ bill.customer_name }}</td>
+          <td>{{ bill.customer_mobile }}</td>
+          <td>{{ bill.customer_contact }}</td>
+          <td style="text-align:left;">{{ bill.customer_address }}</td>
+          <td>{{ item.iphone_model }}</td>
+          <td>{{ item.iphone_storage }}</td>
+          <td>{{ item.iphone_color }}</td>
+          <td>{{ item.iphone_imei }}</td>
+          <td>{{ item.iphone_serial }}</td>
+          <td>{{ item.qty }}</td>
+          <td>{{ "%.2f"|format(bill.subtotal) }}</td>
+          <td>{{ "%.2f"|format(bill.discount) }}</td>
+          <td>{{ "%.2f"|format(bill.net_total) }}</td>
+          <td>
+            <a href="{{ url_for('invoice', bill_id=bill.bill_id) }}" class="btn btn-primary" title="View"><i class="fa fa-eye"></i></a>
+            <a href="{{ url_for('delete_bill', bill_id=bill.bill_id) }}" class="btn btn-danger" title="Delete" onclick="return confirm('Are you sure?')"><i class="fa fa-trash"></i></a>
+          </td>
+        </tr>
+        {% endfor %}
+      {% else %}
+      <tr>
+        <td colspan="16" style="padding:18px;color:#777;">No bills found.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div id="pagination"></div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const rowsPerPage = 15;
+  const table = document.querySelector(".paginated-table");
+  const tbody = table.querySelector("tbody");
+  const rows = Array.from(tbody.querySelectorAll("tr"));
+  const totalRows = rows.length;
+  const pagination = document.getElementById("pagination");
+
+  const totalPages = Math.ceil(totalRows / rowsPerPage);
+  let currentPage = 1;
+
+  function displayPage(page) {
+    currentPage = page;
+    const start = (page - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
+
+    rows.forEach((row, index) => {
+      row.style.display = (index >= start && index < end) ? "" : "none";
+    });
+
+    updatePagination();
+  }
+
+  function updatePagination() {
+    pagination.innerHTML = "";
+
+    const prevBtn = document.createElement("button");
+    prevBtn.innerHTML = "«";
+    prevBtn.disabled = currentPage === 1;
+    prevBtn.className = "page-btn";
+    prevBtn.onclick = () => displayPage(currentPage - 1);
+    pagination.appendChild(prevBtn);
+
+    const pageBlock = document.createElement("button");
+    pageBlock.innerHTML = currentPage;
+    pageBlock.className = "page-btn active";
+    pagination.appendChild(pageBlock);
+
+    const nextBtn = document.createElement("button");
+    nextBtn.innerHTML = "»";
+    nextBtn.disabled = currentPage === totalPages;
+    nextBtn.className = "page-btn";
+    nextBtn.onclick = () => displayPage(currentPage + 1);
+    pagination.appendChild(nextBtn);
+  }
+
+  displayPage(1);
+});
+// Auto-hide flash messages after 3 seconds
+    document.addEventListener("DOMContentLoaded", () => {
+      const alerts = document.querySelectorAll('.alert');
+      alerts.forEach(alert => setTimeout(() => alert.remove(), 3000));
+    });
+</script>
+
+</body>
+</html>

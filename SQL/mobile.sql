@@ -25,8 +25,9 @@ CREATE TABLE iphone_products (
     category VARCHAR(100) NOT NULL,
     iphone_model VARCHAR(100) NOT NULL,
     iphone_storage VARCHAR(50),
-    iphone_price int,
-    iphone_imei int,
+    iphone_purchase_price VARCHAR(100) DEFAULT 0,
+    iphone_sale_price VARCHAR(100) DEFAULT 0,
+    iphone_imei INT,
     iphone_color VARCHAR(50),
     iphone_stock INT,
     iphone_battery_health VARCHAR(10),
@@ -44,41 +45,39 @@ CREATE TABLE customers (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE bills (
+    bill_id INT AUTO_INCREMENT PRIMARY KEY,
+    customer_id INT,
+    customer_name VARCHAR(255),
+    customer_mobile VARCHAR(50),
+    customer_contact VARCHAR(100),
+    customer_address TEXT,
+    bill_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    subtotal DECIMAL(12,2),
+    discount DECIMAL(12,2),
+    net_total DECIMAL(12,2)
+);
+
+CREATE TABLE bill_items (
+    item_id INT AUTO_INCREMENT PRIMARY KEY,
+    bill_id INT,
+    product_id INT,
+    product_model VARCHAR(255),
+    product_storage VARCHAR(50),
+    product_price DECIMAL(12,2),
+    product_serial VARCHAR(100),
+    product_imei VARCHAR(100),
+    product_color VARCHAR(50),
+    qty INT,
+    amount DECIMAL(12,2)
+);
 
 CREATE TABLE company_settings (
   id INT PRIMARY KEY AUTO_INCREMENT,
-  name VARCHAR(255),
+  name VARCHAR(255) NOT NULL,
   address TEXT,
   phone VARCHAR(50),
   email VARCHAR(100),
   terms TEXT
 );
-
-CREATE TABLE bill_header (
-  bill_id INT PRIMARY KEY AUTO_INCREMENT,
-  customer_name VARCHAR(255),
-  customer_mobile VARCHAR(50),
-  customer_contact VARCHAR(100),
-  customer_address TEXT,
-  bill_date DATETIME DEFAULT CURRENT_TIMESTAMP,
-  subtotal DECIMAL(12,2),
-  discount DECIMAL(12,2) DEFAULT 0,
-  tax DECIMAL(12,2) DEFAULT 0,
-  net_total DECIMAL(12,2),
-  payment_status VARCHAR(20) DEFAULT 'Unpaid'
-);
-
-
-CREATE TABLE bill_detail (
-  detail_id INT PRIMARY KEY AUTO_INCREMENT,
-  bill_id INT,
-  product_name VARCHAR(255),
-  price DECIMAL(12,2),
-  quantity DECIMAL(12,3),
-  imei int,
-  serial_number VARCHAR(100),
-  storage varchar(100),
-  line_total DECIMAL(12,2)
-);
-
 

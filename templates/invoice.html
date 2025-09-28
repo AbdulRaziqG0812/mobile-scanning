@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Invoice #{{ bill.bill_id }}</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 40px; background: #fdfdfd; color: #333; }
+        .invoice-box { max-width: 900px; margin: auto; padding: 25px; border: 1px solid #eee; box-shadow: 0 0 15px rgba(0,0,0,0.1); background: #fff; }
+        .header { text-align: center; border-bottom: 2px solid #004aad; padding-bottom: 15px; margin-bottom: 20px; }
+        .header h2 { margin: 0; color: #004aad; }
+        .header p { margin: 4px 0; font-size: 14px; }
+        .info-section { margin-bottom: 20px; }
+        .info-section p { margin: 5px 0; font-size: 14px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: center; font-size: 14px; }
+        th { background: #004aad; color: white; }
+        .totals { margin-top: 20px; float: right; width: 40%; }
+        .totals td { text-align: right; padding: 6px; font-size: 14px; }
+        .totals tr:last-child td { font-weight: bold; font-size: 16px; border-top: 2px solid #000; }
+        .print-btn { margin-top: 30px; text-align: center; }
+        .print-btn button { background: #28a745; color: white; padding: 10px 20px; border: none; font-size: 16px; border-radius: 6px; cursor: pointer; transition: 0.3s; }
+        .print-btn button:hover { background: #218838; }
+        .terms { margin-top: 40px; font-size: 13px; color: #555; }
+
+        @media print {
+            body { margin: 0; }
+            .invoice-box { box-shadow: none; border: none; }
+            .print-btn { display: none; }
+        }
+    </style>
+    <script>function printInvoice() { window.print(); }</script>
+</head>
+<body>
+    <div class="invoice-box">
+        <!-- Company Info -->
+        <div class="header">
+            <h2>{{ company.name }}</h2>
+            <p>{{ company.address }}</p>
+            <p>📞 {{ company.phone }} | ✉️ {{ company.email }}</p>
+        </div>
+
+        <!-- Invoice Info -->
+        <div class="info-section">
+            <p><b>Invoice #:</b> {{ bill.bill_id }}</p>
+            <p><b>Date:</b> {{ bill.bill_date }}</p>
+        </div>
+
+        <!-- Customer Info -->
+        <div class="info-section">
+            <h4>Customer Information</h4>
+            <p><b>Name:</b> {{ customer.customer_name }}</p>
+            <p><b>Mobile:</b> {{ customer.customer_mobile }}</p>
+            <p><b>Contact:</b> {{ customer.customer_contact }}</p>
+            <p><b>Address:</b> {{ customer.customer_address }}</p>
+        </div>
+
+        <!-- Product Table -->
+        <table>
+            <tr>
+                <th>Serial No</th>
+                <th>Model</th>
+                <th>IMEI</th>
+                <th>Storage</th>
+                <th>Color</th>
+                <th>Price</th>
+                <th>Qty</th>
+                <th>Amount</th>
+            </tr>
+            {% for item in items %}
+            <tr>
+                <td>{{ item.product_serial }}</td>
+                <td>{{ item.product_model }}</td>
+                <td>{{ item.product_imei }}</td>
+                <td>{{ item.product_storage }}</td>
+                <td>{{ item.product_color }}</td>
+                <td>{{ "%.2f"|format(item.product_price) }}</td>
+                <td>{{ item.qty }}</td>
+                <td>{{ "%.2f"|format(item.amount) }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+
+        <!-- Totals -->
+        <div class="totals">
+            <table>
+                <tr><td>Subtotal:</td><td>{{ "%.2f"|format(bill.subtotal) }}</td></tr>
+                <tr><td>Discount:</td><td>{{ "%.2f"|format(bill.discount) }}</td></tr>
+                <tr><td>Net Total:</td><td>{{ "%.2f"|format(bill.net_total) }}</td></tr>
+            </table>
+        </div>
+
+        <div style="clear: both;"></div>
+
+        <!-- Print Button -->
+        <div class="print-btn">
+            <button onclick="printInvoice()">🖨️ Print Invoice</button>
+        </div>
+
+        <!-- Terms -->
+        <div class="terms">
+            <h4>Terms & Conditions</h4>
+            <p>{{ company.terms }}</p>
+        </div>
+    </div>
+<script>
+    // Auto-hide flash messages after 3 seconds
+    document.addEventListener("DOMContentLoaded", () => {   
+      const alerts = document.querySelectorAll('.alert');
+      alerts.forEach(alert => setTimeout(() => alert.remove(), 3000));
+    });
+</script>
+</body>
+</html>

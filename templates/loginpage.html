@@ -33,31 +33,7 @@
       margin-bottom: 20px;
       font-weight: 700;
     }
-
-    /* ✅ Flash Messages */
-    .flash-container {
-      margin-bottom: 20px;
-    }
-    .message {
-      padding: 12px;
-      border-radius: 8px;
-      margin-bottom: 12px;
-      font-size: 14px;
-      font-weight: 500;
-      text-align: center;
-      animation: fadeIn 0.5s ease;
-    }
-    .success {
-      background: #e6ffed;
-      border: 1.5px solid #28a745;
-      color: #155724;
-    }
-    .error {
-      background: #ffe6e6;
-      border: 1.5px solid #dc3545;
-      color: #721c24;
-    }
-
+    
     .form-group {
       margin-bottom: 22px;
     }
@@ -156,19 +132,6 @@
 
   <div class="login-container">
     <h2><i class="fa-solid fa-user-lock"></i> Login</h2>
-
-    <!-- ✅ Flask flash messages -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        <div class="flash-container">
-          {% for category, msg in messages %}
-            <div class="message {{ category }}">
-              {{ msg }}
-            </div>
-          {% endfor %}
-        </div>
-      {% endif %}
-    {% endwith %}
     
     <form method="post" action="/loginpage">
       <div class="form-group">
@@ -198,6 +161,26 @@
     </div>
   </div>
 
-  <script src="{{ url_for('static', filename='script.js') }}"></script>
+<script>
+  document.querySelectorAll(".toggle-password").forEach(icon => {
+    icon.addEventListener("click", function() {
+      const targetId = this.getAttribute("data-target");
+      const input = document.getElementById(targetId);
+
+      if (input) {
+        if (input.type === "password") {
+          input.type = "text";
+          this.classList.remove("fa-eye-slash");
+          this.classList.add("fa-eye");
+        } else {
+          input.type = "password";
+          this.classList.remove("fa-eye");
+          this.classList.add("fa-eye-slash");
+        }
+      }
+    });
+  });
+</script>
+
 </body>
 </html>

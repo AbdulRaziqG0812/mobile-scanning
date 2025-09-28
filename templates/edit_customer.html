@@ -111,6 +111,13 @@
       </div>
     </form>
   </div>
+  <script>
+    // Auto-hide flash messages after 3 seconds
+    document.addEventListener("DOMContentLoaded", () => {
+      const flashes = document.querySelectorAll('.flash');
+      flashes.forEach(flash => setTimeout(() => flash.remove(), 3000));
+    });
+  </script>
 
 </body>
 </html>
