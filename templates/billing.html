@@ -227,7 +227,7 @@
         <select name="customer_id" onchange="fetchCustomer(this.value)" required>
           <option value="">— Select customer —</option>
           {% for c in customers %}
-            <option value="{{ c.customer_id }}">{{ c.name }} — {{ c.mobile }}</option>
+            <option value="{{ c.customer_id }}">{{ c.name }} — {{ c.Contact }}</option>
           {% endfor %}
         </select>
       </div>
@@ -305,7 +305,7 @@
         <select id="modal_product" onchange="modalFetchProduct(this.value)">
           <option value="">— Select product —</option>
           {% for p in products %}
-            <option value="{{ p.product_id }}">{{ p.iphone_model }} ({{ p.iphone_storage }}) — Rs {{ p.iphone_sale_price }}</option>
+            <option value="{{ p.product_id }}">{{ p.iphone_model }} ({{ p.iphone_storage }})  ({{ p.iphone_imei }})</option>
           {% endfor %}
         </select>
       </div>

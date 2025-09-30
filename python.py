@@ -18,10 +18,10 @@ db_config= {
 def home():
     return render_template('loginpage.html')
 
-# route for homepage    
+# route for dashboard    
 
-@app.route('/homepage', methods=['GET', 'POST'])
-def homepage(): 
+@app.route('/dashboard', methods=['GET', 'POST'])
+def dashboard(): 
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor(dictionary=True)
 
@@ -49,7 +49,7 @@ def homepage():
     conn.close()
 
     return render_template(
-        "homepage.html",
+        "dashboard.html",
         total_products=total_products,
         total_customers=total_customers,
         monthly_sales=monthly_sales,
@@ -75,7 +75,7 @@ def loginpage():
             existing_user = cursor.fetchone()
 
             if existing_user:
-                return redirect(url_for('homepage'))
+                return redirect(url_for('dashboard'))
             else:
                 flash("Invalid username or password!", "error")
                 return redirect(url_for('loginpage'))
@@ -559,9 +559,10 @@ def billing():
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor(dictionary=True)
 
-    # Fetch customers and products
+    # ✅ Fetch customers and available products
     cursor.execute("SELECT * FROM customers")
     customers = cursor.fetchall()
+
     cursor.execute("SELECT * FROM iphone_products WHERE iphone_stock > 0")
     products = cursor.fetchall()
 
@@ -571,14 +572,45 @@ def billing():
         discount = request.form["discount"]
         net_total = request.form["net_total"]
 
-        # Insert bill
+        # ✅ Fetch full customer info (with aliases for consistency)
         cursor.execute("""
-            INSERT INTO bills (customer_id, subtotal, discount, net_total)
-            VALUES (%s,%s,%s,%s)
-        """, (customer_id, subtotal, discount, net_total))
+            SELECT 
+                name AS customer_name, 
+                mobile AS customer_mobile, 
+                Contact AS customer_contact, 
+                address AS customer_address 
+            FROM customers 
+            WHERE customer_id = %s
+        """, (customer_id,))
+        customer = cursor.fetchone()
+
+        if not customer:
+            flash("Invalid customer selected!", "danger")
+            cursor.close()
+            conn.close()
+            return redirect(url_for("billing"))
+
+        # ✅ Insert into bills with all details
+        cursor.execute("""
+            INSERT INTO bills (
+                customer_id, customer_name, customer_mobile,
+                customer_contact, customer_address,
+                subtotal, discount, net_total
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        """, (
+            customer_id,
+            customer["customer_name"],
+            customer["customer_mobile"],
+            customer["customer_contact"],
+            customer["customer_address"],
+            subtotal,
+            discount,
+            net_total
+        ))
+
         bill_id = cursor.lastrowid
 
-        # Insert items into bill_items
+        # ✅ Insert all items into bill_items
         product_ids = request.form.getlist("product_id[]")
         qtys = request.form.getlist("qty[]")
         amounts = request.form.getlist("amount[]")
@@ -589,24 +621,29 @@ def billing():
             amount = float(amounts[i])
 
             cursor.execute("""
-                INSERT INTO bill_items (bill_id, product_id, product_model, product_storage,
-                                        product_price, product_serial, product_imei, product_color,
-                                        qty, amount)
-                SELECT %s, product_id, iphone_model, iphone_storage, iphone_sale_price,
-                       iphone_serial, iphone_imei, iphone_color, %s, %s
-                FROM iphone_products WHERE product_id=%s
+                INSERT INTO bill_items (
+                    bill_id, product_id, product_model, product_storage,
+                    product_price, product_serial, product_imei,
+                    product_color, qty, amount
+                )
+                SELECT %s, product_id, iphone_model, iphone_storage,
+                       iphone_sale_price, iphone_serial, iphone_imei,
+                       iphone_color, %s, %s
+                FROM iphone_products
+                WHERE product_id = %s
             """, (bill_id, qty, amount, pid))
 
-            # ✅ Update stock safely, don't delete record even if stock goes 0
+            # ✅ Update stock
             cursor.execute("""
                 UPDATE iphone_products
                 SET iphone_stock = GREATEST(iphone_stock - %s, 0)
-                WHERE product_id=%s
+                WHERE product_id = %s
             """, (qty, pid))
 
         conn.commit()
         cursor.close()
         conn.close()
+
         flash("Bill created successfully! You can now print the invoice.", "success")
         return redirect(url_for("invoice", bill_id=bill_id))
 
@@ -614,13 +651,14 @@ def billing():
     conn.close()
     return render_template("billing.html", customers=customers, products=products)
 
+
 # ---------- BILLING LIST ----------
 @app.route("/billing_list")
 def billing_list():
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor(dictionary=True)
 
-    # Fetch bills along with customer info from customers table
+    # Fetch bills with customer info
     cursor.execute("""
         SELECT b.bill_id, b.bill_date,
                c.name AS customer_name,
@@ -635,24 +673,25 @@ def billing_list():
     """)
     bills = cursor.fetchall()
 
-    # Fetch bill items for each bill
+    # Fetch related items for each bill
     bill_items = {}
     for bill in bills:
         cursor.execute("""
             SELECT bi.qty, bi.product_price AS price, bi.amount,
-                   bi.product_model AS iphone_model,
-                   bi.product_storage AS iphone_storage,
-                   bi.product_color AS iphone_color,
-                   bi.product_imei AS iphone_imei,
-                   bi.product_serial AS iphone_serial
+                   bi.product_model,
+                   bi.product_storage,
+                   bi.product_color,
+                   bi.product_imei,
+                   bi.product_serial
             FROM bill_items bi
-            WHERE bi.bill_id=%s
+            WHERE bi.bill_id = %s
         """, (bill['bill_id'],))
         bill_items[bill['bill_id']] = cursor.fetchall()
 
     cursor.close()
     conn.close()
     return render_template("billing_list.html", bills=bills, bill_items=bill_items)
+
 
 # ---------- DELETE BILL ----------
 @app.route('/delete_bill/<int:bill_id>', methods=['GET'])
@@ -676,48 +715,64 @@ def search_bill():
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor(dictionary=True)
 
-    # Step 1: Get all bill_ids that match the search keyword in bill_items
+    bills = []
+    bill_items = {}
+
+    # ✅ Step 1: Search filter (correct JOIN order)
     if keyword:
         cursor.execute("""
             SELECT DISTINCT b.bill_id
             FROM bills b
+            JOIN customers c ON b.customer_id = c.customer_id
             JOIN bill_items bi ON bi.bill_id = b.bill_id
-            WHERE bi.product_model LIKE %s OR bi.product_imei LIKE %s
-        """, (f"%{keyword}%", f"%{keyword}%"))
-        bill_ids = [row['bill_id'] for row in cursor.fetchall()]
-        if bill_ids:
-            format_ids = ','.join(['%s']*len(bill_ids))
-            # Step 2: Fetch bills with customers
-            cursor.execute(f"""
-                SELECT b.*, c.name AS customer_name, c.mobile AS customer_mobile,
-                       c.contact AS customer_contact, c.address AS customer_address
-                FROM bills b
-                JOIN customers c ON b.customer_id = c.customer_id
-                WHERE b.bill_id IN ({format_ids})
-                ORDER BY b.bill_date DESC
-            """, bill_ids)
-            bills = cursor.fetchall()
-        else:
-            bills = []
+            WHERE bi.product_model LIKE %s 
+               OR bi.product_imei LIKE %s
+               OR bi.product_serial LIKE %s
+               OR c.name LIKE %s
+               OR c.mobile LIKE %s
+        """, (
+            f"%{keyword}%", f"%{keyword}%", f"%{keyword}%", 
+            f"%{keyword}%", f"%{keyword}%"
+        ))
+        bill_ids = [row["bill_id"] for row in cursor.fetchall()]
     else:
-        # Show all bills
+        bill_ids = []
+
+    # ✅ Step 2: Fetch bills (filtered or all)
+    if bill_ids:
+        format_ids = ",".join(["%s"] * len(bill_ids))
+        cursor.execute(f"""
+            SELECT b.*, c.name AS customer_name, c.mobile AS customer_mobile,
+                   c.Contact AS customer_contact, c.address AS customer_address
+            FROM bills b
+            JOIN customers c ON b.customer_id = c.customer_id
+            WHERE b.bill_id IN ({format_ids})
+            ORDER BY b.bill_date DESC
+        """, bill_ids)
+    else:
         cursor.execute("""
             SELECT b.*, c.name AS customer_name, c.mobile AS customer_mobile,
-                   c.contact AS customer_contact, c.address AS customer_address
+                   c.Contact AS customer_contact, c.address AS customer_address
             FROM bills b
             JOIN customers c ON b.customer_id = c.customer_id
             ORDER BY b.bill_date DESC
         """)
-        bills = cursor.fetchall()
+    bills = cursor.fetchall()
 
-    # Step 3: Fetch items for each bill
-    bill_items = {}
-    for bill in bills:
-        cursor.execute("SELECT * FROM bill_items WHERE bill_id = %s", (bill['bill_id'],))
-        bill_items[bill['bill_id']] = cursor.fetchall()
+    # ✅ Step 3: Fetch all bill_items for these bills
+    if bills:
+        bill_ids = [bill["bill_id"] for bill in bills]
+        format_ids = ",".join(["%s"] * len(bill_ids))
+        cursor.execute(f"SELECT * FROM bill_items WHERE bill_id IN ({format_ids})", bill_ids)
+        all_items = cursor.fetchall()
+
+        for item in all_items:
+            bid = item["bill_id"]
+            bill_items.setdefault(bid, []).append(item)
 
     cursor.close()
     conn.close()
+
     return render_template("billing_list.html", bills=bills, bill_items=bill_items, keyword=keyword)
 
 
