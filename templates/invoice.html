@@ -1,307 +1,210 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Invoice - {{ company.name }}</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
-  body {
-    font-family: 'Segoe UI', Tahoma, sans-serif;
-    background: #f4f6f9;
-    margin: 0;
-    padding: 20px;
-    color: #333;
+  :root {
+    --accent: #6dbf3a;
+    --border: #cfcfcf;
+    --paper: #ffffff;
+    --muted: #666;
   }
 
-  .invoice-container {
-    background: #fff;
-    max-width: 800px;
-    margin: auto;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.08);
-    padding: 30px;
+  html,body {
+    margin:0;
+    background:white;
+    font-family:"Segoe UI", Tahoma, Arial, sans-serif;
+    color:#222;
   }
 
-  /* Header */
-  .invoice-header {
-    text-align: center;
-    border-bottom: 3px solid #2F75C6;
-    padding-bottom: 10px;
-    margin-bottom: 25px;
+  .page {
+    width:148mm;       /* A5 width */
+    min-height:210mm;  /* A5 height */
+    margin:10mm auto;
+    padding:0;
+    box-sizing:border-box;
+    background:white;
   }
 
-  .invoice-header h1 {
-    color: #2F75C6;
-    margin: 0;
-    font-size: 26px;
-    text-transform: uppercase;
+  .invoice {
+    background:white;
+    border:1px solid #ddd;
+    padding:15px 18px;
+    position:relative;
+    box-sizing:border-box;
+    height:auto;
   }
 
-  .invoice-header p {
-    margin: 3px 0;
-    color: #555;
-    font-size: 14px;
+  .watermark {
+    position:absolute;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    font-size:60px;  /* adjust for smaller A5 page */
+    color: rgba(109, 191, 58, 0.10);
+    font-weight:900;
+    letter-spacing:4px;
+    user-select:none;
+    z-index:0;
+    white-space:nowrap;
+    text-transform:uppercase;
   }
 
-  /* Info Section */
-  .info-section {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-  }
+  .top-row { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; }
+  .company-left, .company-right, .company-center { flex:1; line-height:1.4; }
+  .company-left { font-size:11px; color:var(--muted); }
+  .company-center { text-align:center; }
+  .company-center h2 { color:var(--accent); font-size:32px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .company-right { text-align:right; font-size:12px; }
+  .company-right .arabic-title { font-weight:700; font-size:16px; margin-bottom:4px; white-space:nowrap; }
+  .vat-line { margin-top:4px; border-top:2px solid var(--accent); padding-top:4px; font-weight:600; }
 
-  .info-box {
-    width: 48%;
-    background: #f9fbff;
-    border: 1px solid #d8e3f3;
-    border-radius: 8px;
-    padding: 10px 15px;
-    box-sizing: border-box;
-  }
+  .info-grid { display:flex; justify-content:space-between; gap:6px; margin-top:10px; }
+  .info-left, .info-right { border:1px solid var(--border); padding:5px 6px; box-sizing:border-box; font-size:11px; }
+  .info-left { flex:1; }
+  .info-right { width:40%; }
+  .info-title { font-weight:700; margin-bottom:3px; color:#333; }
 
-  .info-box h3 {
-    color: #2F75C6;
-    font-size: 15px;
-    margin-bottom: 10px;
-    border-bottom: 1px solid #d8e3f3;
-    padding-bottom: 4px;
-  }
+  .table-wrap { margin-top:12px; border:1px solid var(--border); page-break-inside: avoid; }
+  table.items { width:100%; border-collapse:collapse; page-break-inside:auto; font-size:12px; }
+  table.items thead th { background:#fff; padding:6px; border-bottom:1.5px solid #bbb; font-weight:700; text-align:center; }
+  table.items tbody td { padding:5px 4px; border-bottom:1px solid #eee; }
+  table.items thead th.left, table.items tbody td.left { text-align:left; padding-left:6px; }
 
-  .info-box p {
-    margin: 3px 0;
-    font-size: 13.5px;
-  }
+  .terms { margin-top:12px; border:1px solid var(--border); padding:8px; font-size:11px; page-break-inside: avoid; }
 
-  /* Table */
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 25px;
-  }
+  .end-row { display:flex; justify-content:space-between; align-items:center; border-top:1.5px solid #ddd; padding:8px 4px; font-size:12px; }
+  .end-right { font-size:14px; font-weight:800; color:#222; }
 
-  th, td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: center;
-    font-size: 13.5px;
-  }
+  .footer-boxes { display:flex; gap:6px; margin-top:12px; padding:4px 0; page-break-inside: avoid; font-size:11px; }
+  .footer-box { flex:1; border:1px solid var(--border); padding:4px; text-align:center; }
+  .footer-box.signature { text-align:left; padding-left:8px; }
+  .footer-box .title { font-weight:700; margin-bottom:2px; }
 
-  th {
-    background-color: #2F75C6;
-    color: white;
-    text-transform: uppercase;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
+  .contact-bar { margin-top:12px; border-top:2px solid #e6e6e6; padding-top:4px; display:flex; justify-content:space-between; font-size:11px; color:var(--muted); }
+  .contact-right i { margin-right:2px; }
 
-  tr:nth-child(even) {
-    background-color: #f9fbff;
-  }
+  .print-btn { position:fixed; top:10px; right:10px; background:var(--accent); color:#fff; border:none; padding:6px 10px; border-radius:4px; cursor:pointer; font-size:12px; box-shadow:0 1px 3px rgba(0,0,0,0.15); }
+  .print-btn:hover { background:#5aaa32; }
 
-  /* Totals */
-  .totals {
-    width: 100%;
-    text-align: right;
-  }
-
-  .totals td {
-    font-weight: bold;
-    font-size: 14px;
-    padding: 6px 10px;
-  }
-
-  .totals .label {
-    text-align: right;
-    color: #2F75C6;
-  }
-
-  /* Terms & Thank You */
-  .terms {
-    margin-top: 40px;
-    font-size: 13px;
-    color: #444;
-    border-top: 1px solid #d8e3f3;
-    padding-top: 10px;
-  }
-
-  .terms h4 {
-    color: #2F75C6;
-    margin-bottom: 8px;
-    font-size: 15px;
-  }
-
-  .thank-you {
-    text-align: center;
-    color: #2F75C6;
-    font-size: 15px;
-    font-weight: 600;
-    margin-top: 25px;
-    border-top: 2px dashed #d8e3f3;
-    padding-top: 10px;
-  }
-
-  /* Signature */
-  .signatures {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 50px;
-  }
-
-  .signature-box {
-    width: 40%;
-    text-align: center;
-    border-top: 2px solid #2F75C6;
-    padding-top: 8px;
-    font-size: 13.5px;
-  }
-
-  .signature-box span {
-    color: #2F75C6;
-    font-weight: bold;
-  }
-
-  /* Print Button */
-  .print-btn {
-    text-align: center;
-    margin-top: 25px;
-  }
-
-  .print-btn button {
-    background: #2F75C6;
-    color: #fff;
-    border: none;
-    border-radius: 5px;
-    padding: 10px 22px;
-    font-size: 14px;
-    cursor: pointer;
-    transition: 0.3s ease;
-  }
-
-  .print-btn button:hover {
-    background: #245d9e;
-  }
-
-  /* Print Styling */
   @media print {
-    body {
-      background: white;
-      margin: 0;
-    }
-
-    .invoice-container {
-      box-shadow: none;
-      border: none;
-      margin: 0;
-      padding: 10px 25px;
-    }
-
-    .print-btn {
-      display: none;
-    }
+    .print-btn { display:none; }
+    body { background:white !important; margin:0; padding:0; }
+    .page { margin:0; padding:0; width:100%; box-shadow:none !important; border:none !important; background:white !important; }
+    .invoice { background:white !important; padding:15px 18px; border:none; box-shadow:none !important; }
+    .watermark { font-size:60px; }
   }
 </style>
-
-<script>
-  function printInvoice() {
-    window.print();
-  }
-</script>
 </head>
 <body>
-  <div class="invoice-container">
-    <!-- Header -->
-    <div class="invoice-header">
-      <h1>{{ company.name }}</h1>
-      <p>{{ company.address }}</p>
-      <p>📞 {{ company.phone }} | ✉️ {{ company.email }}</p>
-    </div>
 
-    <!-- Info Section -->
-    <div class="info-section">
-      <div class="info-box">
-        <h3>Customer Details / تفاصيل الزبون</h3>
-        <p><strong>Name / الاسم:</strong> {{ bill.customer_name }}</p>
-        <p><strong>Mobile / الجوال:</strong> {{ bill.customer_mobile }}</p>
-        <p><strong>Contact / التواصل:</strong> {{ bill.customer_contact }}</p>
-        <p><strong>Address / العنوان:</strong> {{ bill.customer_address }}</p>
+<button class="print-btn" onclick="window.print()">🖨️ Print Invoice</button>
+
+<div class="page">
+  <div class="invoice">
+    <div class="watermark">MAT</div>
+
+    <div class="top-row">
+      <div class="company-left">
+        <div><strong>C.R.No :</strong> {{ company.cr_no or '' }}</div>
+        <div><strong>P.O. Box :</strong> {{ company.po_box or '' }}</div>
+        <div><strong>P.C :</strong> {{ company.postal_code or '' }}</div>
+        <div>{{ company.country or '' }}</div>
       </div>
 
-      <div class="info-box">
-        <h3>Invoice Info / معلومات الفاتورة</h3>
-        <p><strong>Invoice No / رقم الفاتورة:</strong> {{ bill.bill_id }}</p>
-        <p><strong>Date / التاريخ:</strong> {{ bill.bill_date }}</p>
+      <div class="company-center"><h2>MAT</h2></div>
+
+      <div class="company-right">
+        <span class="arabic-title">{{ company.name_ar or '' }}</span>
+        <div class="vat-line"><div><strong>VATTIN No :</strong>&nbsp;{{ company.vat_no or '' }}</div></div>
       </div>
     </div>
 
-    <!-- Product Table -->
-    <table>
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Model / الموديل</th>
-          <th>IMEI / رقم IMEI</th>
-          <th>Storage / السعة</th>
-          <th>Color / اللون</th>
-          <th>Price / السعر</th>
-          <th>Qty / الكمية</th>
-          <th>Amount / المجموع</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for item in items %}
-        <tr>
-          <td>{{ loop.index }}</td>
-          <td>{{ item.product_model }}</td>
-          <td>{{ item.product_imei }}</td>
-          <td>{{ item.product_storage }}</td>
-          <td>{{ item.product_color }}</td>
-          <td>{{ "%.2f"|format(item.product_price) }}</td>
-          <td>{{ item.qty }}</td>
-          <td>{{ "%.2f"|format(item.amount) }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    <div class="info-grid">
+      <div class="info-left">
+        <div class="info-title">Customer: / العميل</div>
+        <div><strong>{{ bill.customer_name or 'Cash' }}</strong></div>
+        <div class="muted">Mobile: {{ bill.customer_mobile or '-' }}</div>
+        <div class="muted">Contact: {{ bill.customer_contact or '-' }}</div>
+        <div class="muted">Address: {{ bill.customer_address or '-' }}</div>
+      </div>
+      <div class="info-right">
+        <div class="muted">Invoice No: <strong>{{ bill.bill_id }}</strong></div>
+        <div class="muted">Date: <strong>{{ bill.bill_date }}</strong></div>
+      </div>
+    </div>
 
-    <!-- Totals -->
-    <table class="totals">
-      <tr>
-        <td class="label">Subtotal / المجموع الفرعي:</td>
-        <td>{{ "%.2f"|format(bill.subtotal) }}</td>
-      </tr>
-      <tr>
-        <td class="label">Discount / الخصم:</td>
-        <td>{{ "%.2f"|format(bill.discount) }}</td>
-      </tr>
-      <tr>
-        <td class="label">Net Total / المجموع النهائي:</td>
-        <td><strong>{{ "%.2f"|format(bill.net_total) }}</strong></td>
-      </tr>
-    </table>
+    <div class="table-wrap">
+      <table class="items">
+        <thead>
+          <tr>
+            <th class="col-sno">S.No<br/>الرقم</th>
+            <th class="left col-desc">Description of Goods<br/>البيان الصنف</th>
+            <th>Qty<br/>الكمية</th>
+            <th>Rate<br/>معدل</th>
+            <th>Amount<br/>المبلغ</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in items %}
+          <tr>
+            <td class="left">{{ loop.index }}</td>
+            <td class="left">
+              <strong>{{ item.product_model }}</strong>
+              {% if item.product_storage %}<div style="font-size:11px;color:var(--muted);">Storage: {{ item.product_storage }}</div>{% endif %}
+              {% if item.product_imei %}<div style="font-size:11px;color:var(--muted);">IMEI: {{ item.product_imei }}</div>{% endif %}
+              {% if item.product_serial %}<div style="font-size:11px;color:var(--muted);">Serial: {{ item.product_serial }}</div>{% endif %}
+            </td>
+            <td>{{ item.qty }}</td>
+            <td>{{ "%.3f"|format(item.product_price) }}</td>
+            <td>{{ "%.3f"|format(item.amount) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
 
-    <!-- Terms -->
     <div class="terms">
-      <h4>Terms & Conditions / الشروط والأحكام</h4>
-      <p>{{ company.terms }}</p>
+      <strong>Terms & Conditions:</strong>
+      <div>{{ company.terms or 'N/A' }}</div>
     </div>
 
-    <!-- Thank You Message -->
-    <div class="thank-you">
-      ❤️ Thank you for your business! / شكراً لتعاملكم معنا
+    <div class="end-row">
+      <div>♦ End of List<br><small>Omani Rial {{ bill.amount_in_words or '' }} Only</small></div>
+      <div class="end-right">{{ "%.3f"|format(bill.net_total) }} OMR</div>
     </div>
 
-    <!-- Signature -->
-    <div class="signatures">
-      <div class="signature-box">
-        <span>Authorized Signature</span><br>التوقيع المعتمد
+    <div class="footer-boxes">
+      <div class="footer-box signature">
+        <div class="title">Goods Received</div>
+        <div>______________________</div>
+      </div>
+      <div class="footer-box">
+        <div class="title">Received the above goods in good condition and order</div>
+      </div>
+      <div class="footer-box">
+        <div class="title">Computer Generated</div>
+        <div>Invoice does not require Signature</div>
       </div>
     </div>
 
-    <!-- Print Button -->
-    <div class="print-btn">
-      <button onclick="printInvoice()">🖨️ Print Invoice</button>
+    <div class="contact-bar">
+      <div class="contact-left">
+        {% if company.phone %}📞 {{ company.phone }}{% endif %}
+        {% if company.email %} ✉️ {{ company.email }}{% endif %}
+      </div>
+      <div class="contact-right">
+        {% if company.instagram %}<i class="fab fa-instagram"></i> {{ company.instagram }} &nbsp;{% endif %}
+        {% if company.facebook %}<i class="fab fa-facebook"></i> {{ company.facebook }} &nbsp;{% endif %}
+        {% if company.snapchat %}<i class="fab fa-snapchat"></i> {{ company.snapchat }}{% endif %}
+      </div>
     </div>
+
   </div>
+</div>
+
 </body>
 </html>

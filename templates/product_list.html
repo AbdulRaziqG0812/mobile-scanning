@@ -4,155 +4,167 @@
   <meta charset="UTF-8">
   <title>Product List</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
   <style>
+    /* 🌈 Animated Gradient Background */
     body { 
-        font-family: "Segoe UI", Tahoma, sans-serif; 
-        background: #f4f6f9; 
-        margin: 0; 
-        padding: 20px; 
-        color: #333;
-        overflow-y: auto;    
+      font-family: "Segoe UI", Tahoma, sans-serif; 
+      margin: 0; 
+      padding: 20px; 
+      color: #fff;
+      background: linear-gradient(135deg, #1e3c72, #2a5298, #4a90e2);
+      background-size: 400% 400%;
+      animation: gradientShift 10s ease infinite;
+      overflow-y: auto;
     }
 
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* 🏷️ Heading */
     h1 { 
-        text-align: center; 
-        color: #004aad; 
-        margin-bottom: 30px; 
-        font-size: 34px; 
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 1.5px;
-        border-bottom: 3px solid #004aad;
-        display: inline-block;
-        padding-bottom: 8px;
+      text-align: center; 
+      color: #fff; 
+      margin-bottom: 30px; 
+      font-size: 32px; 
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border-bottom: 3px solid #ffcc00;
+      display: inline-block;
+      padding-bottom: 8px;
+      text-shadow: 0 0 12px rgba(0,0,0,0.4);
     }
 
+    /* 🔝 Top Action Bar */
+    .top-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    /* 🔍 Search Box */
+    .search-box form {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.15);
+      padding: 8px 12px;
+      border-radius: 8px;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+    }
+
+    .search-box input {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      background: rgba(255,255,255,0.2);
+      color: #fff;
+      min-width: 240px;
+      outline: none;
+    }
+
+    .search-box input::placeholder {
+      color: rgba(255,255,255,0.8);
+    }
+
+    /* 🔘 Buttons */
+    .btn { 
+      padding: 8px 14px; 
+      border-radius: 8px; 
+      color: white; 
+      font-size: 14px; 
+      text-decoration: none; 
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.25s ease;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn i { font-size: 14px; }
+    .btn-success { background: linear-gradient(90deg, #28a745, #34ce57); }
+    .btn-back { background: linear-gradient(90deg, #17a2b8, #20c997); }
+    .btn-edit { background: linear-gradient(90deg, #ffc107, #ffdd57); color: #000; }
+    .btn-delete { background: linear-gradient(90deg, #dc3545, #e55368); }
+
+    .btn:hover { 
+      transform: translateY(-2px); 
+      box-shadow: 0 3px 8px rgba(0,0,0,0.3); 
+    }
+
+    /* 💎 Glass Table */
     .table-container {
-        width: 100%;
-        overflow-x: auto;
-        border-radius: 12px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-        background: #fff;
+      width: 100%;
+      overflow-x: auto;  /* horizontal scroll */
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      padding: 5px;
     }
 
     table { 
-        width: 100%;
-        min-width: 1200px;
-        border-collapse: collapse; 
-        background: #fff; 
+      width: max-content; /* table width adjusts to content */
+      min-width: 100%;    /* ensure scroll if screen small */
+      border-collapse: collapse; 
+      background: transparent; 
     }
 
     th, td { 
-        padding: 12px 14px; 
-        text-align: center; 
-        font-size: 14px; 
-        white-space: nowrap;
-        border: 1px solid #d1d9e6;
+      padding: 12px 14px; 
+      text-align: center; 
+      font-size: 14px; 
+      border-bottom: 1px solid rgba(255,255,255,0.3);
+      color: #fff;
+      white-space: nowrap;  /* prevents wrapping, keeps data in one line */
     }
 
     th { 
-        background: #007bff; 
-        color: white; 
-        font-weight: 600; 
-        text-transform: uppercase;
-        letter-spacing: 0.7px;
-        font-size: 13px;
+      background: rgba(0,0,0,0.3);
+      color: #ffcc00; 
+      font-weight: 600; 
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      font-size: 13px;
     }
 
-    tr:nth-child(even) { background: #f9f9f9; }
-    tr:hover { background: #eef6ff; transition: 0.2s; }
+    tr:hover { 
+      background: rgba(255,255,255,0.1); 
+      transition: 0.2s; 
+    }
 
-    /* ✅ Simplified Total Row */
+    /* 🧾 Total Row */
     tfoot tr {
-        background: #e7f0ff;
-        color: #000;
-        font-weight: 600;
-        text-transform: uppercase;
-        font-size: 14px;
+      background: rgba(0,0,0,0.3);
+      color: #ffcc00;
+      font-weight: 600;
     }
 
-    /* Buttons */
-    .btn { 
-        padding: 7px 12px; 
-        border-radius: 8px; 
-        color: white; 
-        font-size: 13px; 
-        text-decoration: none; 
-        font-weight: 500;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        transition: all 0.25s ease;
-        border: none;
-        cursor: pointer;
-    }
-    .btn-primary { background: #007bff; }
-    .btn-danger { background: #dc3545; }
-    .btn-success { background: #28a745; }
-    .btn-back { background: #17a2b8; }
-    .btn-filter { background: #6c63ff; }
-
-    .btn:hover { 
-        transform: translateY(-2px); 
-        box-shadow: 0 3px 8px rgba(0,0,0,0.2); 
-    }
-
-    /* ✅ Unified Alert Styling */
+    /* 🛎️ Flash Messages */
     .alert { 
-        padding: 12px 15px; 
-        margin: 15px auto; 
-        width: 95%; 
-        border-radius: 8px; 
-        font-weight: 500; 
-        text-align: center; 
-        color: #fff;
-        background: #007bff;
-        box-shadow: 0 3px 6px rgba(0,0,0,0.1); 
+      padding: 12px; 
+      margin: 15px auto; 
+      width: 95%; 
+      border-radius: 8px; 
+      font-weight: 500; 
+      text-align: center; 
+      box-shadow: 0 3px 6px rgba(0,0,0,0.1); 
     }
+    .alert-success { background: #28a745; color: #fff; }
+    .alert-error { background: #dc3545; color: #fff; }
 
-    /* Top action bar */
-    .top-actions {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 25px;
-        flex-wrap: wrap;
-        gap: 12px;
-    }
-
-    /* Search box */
-    .search-box form {
-        display: flex;
-        gap: 10px;
-        align-items: center;
-        background: #fff;
-        padding: 8px 12px;
-        border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-    }
-    .search-box input {
-        padding: 8px 12px;
-        border: 1.5px solid #d0d7e2;
-        border-radius: 6px;
-        background: #fafbff;
-        font-size: 14px;
-        min-width: 220px;
-    }
-    .search-box input:focus {
-        border-color: #6c63ff;
-        box-shadow: 0 0 0 3px rgba(108,99,255,0.15);
-        background: #fff;
-        outline: none;
-    }
-
-    /* Buttons group */
-    .action-buttons {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-    }
-
-    /* ✅ Pagination Styling */
+    /* 📄 Pagination */
     #pagination {
       display: flex;
       justify-content: center;
@@ -161,66 +173,62 @@
       flex-wrap: wrap;
       margin-top: 20px;
     }
+
     .page-btn {
-      background: #007bff;
+      background: linear-gradient(90deg, #1e90ff, #00bfff);
       color: white;
       border: none;
-      padding: 6px 12px;
-      border-radius: 6px;
+      padding: 8px 13px;
+      border-radius: 50%;
       cursor: pointer;
       transition: all 0.3s;
+      width: 35px;
+      height: 35px;
     }
+
     .page-btn:hover { background: #0056b3; }
     .page-btn.active {
-      background: #28a745;
+      background: linear-gradient(90deg, #28a745, #34ce57);
       font-weight: bold;
-      transform: scale(1.05);
-    }
-    .page-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
+      transform: scale(1.1);
     }
   </style>
 </head>
-<body>
 
+<body>
   <div style="text-align:center;">
-      <h1>📱 Product List</h1>
+    <h1>📱 Product List</h1>
   </div>
 
   <!-- ✅ Flash Messages -->
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
       {% for category, message in messages %}
-        <div class="alert">
+        <div class="alert alert-{{ category }}">
           <i class="fa-solid fa-info-circle"></i> {{ message }}
         </div>
       {% endfor %}
     {% endif %}
   {% endwith %}
 
-  <!-- ✅ Top Actions -->
+  <!-- 🔝 Top Actions -->
   <div class="top-actions">
     <div class="search-box">
       <form method="GET" action="{{ url_for('search') }}">
         <input type="text" name="q" placeholder="Search by Category, Model or IMEI..." value="{{ keyword }}">
-        <button type="submit" class="btn btn-filter">
-            <i class="fa-solid fa-magnifying-glass"></i> Search
+        <button type="submit" class="btn btn-success">
+          <i class="fa-solid fa-magnifying-glass"></i> Search
         </button>
       </form>
     </div>
 
-    <div class="action-buttons">
-        <a href="/product" class="btn btn-success">
-            <i class="fa-solid fa-plus"></i> Add Product
-        </a>
-        <a href="/dashboard" class="btn btn-back">
-            <i class="fa-solid fa-house"></i> Home
-        </a>
+    <div>
+      <a href="/product" class="btn btn-success"><i class="fa-solid fa-plus"></i> Add Product</a>
+      <a href="/dashboard" class="btn btn-back"><i class="fa-solid fa-house"></i> Home</a>
     </div>
   </div>
 
-  <!-- ✅ Product Table -->
+  <!-- 💎 Product Table -->
   <div class="table-container">
     <table class="paginated-table">
       <thead>
@@ -237,7 +245,7 @@
           <th>Stock</th>
           <th>Purchase Price</th>
           <th>Sale Price</th>
-          <th style="width:120px;">Actions</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -256,11 +264,9 @@
           <td>{{ p.iphone_purchase_price }}</td>
           <td>{{ p.iphone_sale_price }}</td>
           <td>
-            <a href="{{ url_for('edit_product', product_id=p.product_id) }}" class="btn btn-primary" title="Edit">
-              <i class="fa fa-pen"></i>
-            </a>
+            <a href="{{ url_for('edit_product', product_id=p.product_id) }}" class="btn btn-edit"><i class="fa fa-pen"></i></a>
             <form method="post" action="{{ url_for('delete_product', product_id=p.product_id) }}" style="display:inline;">
-              <button type="submit" class="btn btn-danger" title="Delete" onclick="return confirm('Are you sure?')">
+              <button type="submit" class="btn btn-delete" onclick="return confirm('Are you sure?')">
                 <i class="fa fa-trash"></i>
               </button>
             </form>
@@ -268,12 +274,10 @@
         </tr>
         {% else %}
         <tr>
-          <td colspan="13" style="padding:18px;color:#777;">No products found.</td>
+          <td colspan="13" style="padding:18px;color:#ffcc00;">No products found.</td>
         </tr>
         {% endfor %}
       </tbody>
-
-      <!-- ✅ Total Summary Row -->
       <tfoot>
         <tr>
           <td colspan="10" style="text-align:right;">Total Summary</td>
@@ -285,67 +289,58 @@
     </table>
   </div>
 
-  <!-- ✅ Pagination (auto added by JS) -->
+  <!-- 📄 Pagination -->
   <div id="pagination"></div>
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-  const rowsPerPage = 15;
-  const table = document.querySelector(".paginated-table");
-  const tbody = table.querySelector("tbody");
-  const rows = Array.from(tbody.querySelectorAll("tr"));
-  const totalRows = rows.length;
-  const pagination = document.getElementById("pagination");
 
-  const totalPages = Math.ceil(totalRows / rowsPerPage);
-  let currentPage = 1;
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const rowsPerPage = 15;
+    const table = document.querySelector(".paginated-table");
+    const tbody = table.querySelector("tbody");
+    const rows = Array.from(tbody.querySelectorAll("tr"));
+    const pagination = document.getElementById("pagination");
 
-  function displayPage(page) {
-    currentPage = page;
-    const start = (page - 1) * rowsPerPage;
-    const end = start + rowsPerPage;
+    const totalPages = Math.ceil(rows.length / rowsPerPage);
+    let currentPage = 1;
 
-    rows.forEach((row, index) => {
-      row.style.display = (index >= start && index < end) ? "" : "none";
-    });
+    function displayPage(page) {
+      currentPage = page;
+      const start = (page - 1) * rowsPerPage;
+      const end = start + rowsPerPage;
+      rows.forEach((r, i) => r.style.display = (i >= start && i < end) ? "" : "none");
+      updatePagination();
+    }
 
-    updatePagination();
-  }
+    function updatePagination() {
+      pagination.innerHTML = "";
+      const prev = document.createElement("button");
+      prev.innerHTML = "«";
+      prev.disabled = currentPage === 1;
+      prev.className = "page-btn";
+      prev.onclick = () => displayPage(currentPage - 1);
+      pagination.appendChild(prev);
 
-  function updatePagination() {
-    pagination.innerHTML = "";
+      const pageBtn = document.createElement("button");
+      pageBtn.innerHTML = currentPage;
+      pageBtn.className = "page-btn active";
+      pagination.appendChild(pageBtn);
 
-    // Prev button
-    const prevBtn = document.createElement("button");
-    prevBtn.innerHTML = "«";
-    prevBtn.disabled = currentPage === 1;
-    prevBtn.className = "page-btn";
-    prevBtn.onclick = () => displayPage(currentPage - 1);
-    pagination.appendChild(prevBtn);
+      const next = document.createElement("button");
+      next.innerHTML = "»";
+      next.disabled = currentPage === totalPages;
+      next.className = "page-btn";
+      next.onclick = () => displayPage(currentPage + 1);
+      pagination.appendChild(next);
+    }
 
-    // ✅ Only one block with changing number
-    const pageBlock = document.createElement("button");
-    pageBlock.innerHTML = currentPage;
-    pageBlock.className = "page-btn active";
-    pagination.appendChild(pageBlock);
+    displayPage(1);
+  });
 
-    // Next button
-    const nextBtn = document.createElement("button");
-    nextBtn.innerHTML = "»";
-    nextBtn.disabled = currentPage === totalPages;
-    nextBtn.className = "page-btn";
-    nextBtn.onclick = () => displayPage(currentPage + 1);
-    pagination.appendChild(nextBtn);
-  }
-
-  displayPage(1);
-});
-// Auto-hide flash messages after 3 seconds
+    // <!-- ✅ Auto-hide Flash Messages -->
     document.addEventListener("DOMContentLoaded", () => {
       const alerts = document.querySelectorAll('.alert');
       alerts.forEach(alert => setTimeout(() => alert.remove(), 3000));
     });
-</script>
-
-
+  </script>
 </body>
 </html>

@@ -9,28 +9,36 @@
   :root{
     --primary:#0b63d6;
     --muted:#6b7280;
-    --bg:#f5f8ff;
-    --card:#ffffff;
+    --bg-gradient:linear-gradient(135deg, #dbeafe 0%, #eef2ff 40%, #ffffff 100%);
+    --card:#ffffffcc; /* glass effect */
     --success:#16a34a;
     --danger:#ef4444;
-    --radius:10px;
+    --radius:12px;
   }
-  *{box-sizing:border-box}
+
+  *{box-sizing:border-box;}
   body{
     margin:0;
-    font-family: "Inter", "Segoe UI", Tahoma, sans-serif;
-    background:var(--bg);
+    font-family:"Inter","Segoe UI",Tahoma,sans-serif;
+    background:var(--bg-gradient);
     color:#0f172a;
     -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    padding:40px 15px;
   }
 
   .container{
+    width:100%;
     max-width:1100px;
-    margin:28px auto;
-    padding:22px;
     background:var(--card);
+    backdrop-filter:blur(8px);
     border-radius:var(--radius);
-    box-shadow:0 10px 30px rgba(2,6,23,0.08);
+    padding:25px;
+    box-shadow:0 10px 30px rgba(2,6,23,0.12);
+    border:1px solid rgba(11,99,214,0.08);
   }
 
   header.top{
@@ -42,8 +50,10 @@
   }
   header.top h1{
     margin:0;
-    font-size:20px;
+    font-size:22px;
     color:var(--primary);
+    font-weight:700;
+    letter-spacing:0.5px;
   }
   header.top .actions { display:flex; gap:10px; align-items:center; }
 
@@ -55,11 +65,16 @@
     border-radius:8px;
     cursor:pointer;
     font-weight:600;
+    transition:all 0.25s ease;
+  }
+  .btn:hover{
+    background:#084cb6;
+    transform:translateY(-1px);
   }
   .btn.ghost{
     background:transparent;
     color:var(--primary);
-    border:1px solid rgba(11,99,214,0.12);
+    border:1px solid rgba(11,99,214,0.3);
   }
   .btn.danger{ background:var(--danger); }
 
@@ -101,13 +116,14 @@
     overflow:auto;
     border:1px solid rgba(11,99,214,0.06);
     max-height:360px;
+    background:#fff;
   }
 
   table{
     width:100%;
     border-collapse:collapse;
     table-layout:fixed;
-    min-width:940px; /* Adjusted for removed battery column */
+    min-width:940px;
   }
   thead th{
     position:sticky;
@@ -124,6 +140,7 @@
     border-bottom:1px solid #f1f5f9;
     vertical-align:middle;
     font-size:14px;
+    background:#fcfdff;
   }
 
   .td-center{ text-align:center; }
@@ -169,6 +186,7 @@
     padding:6px;
     border-radius:6px;
   }
+  .icon-btn:hover{ background:#f2f6ff; }
 
   /* Modal */
   .modal{
@@ -182,7 +200,7 @@
   .modal.show{ display:flex; }
   .modal-backdrop{
     position:absolute; inset:0; background:rgba(3,7,18,0.45);
-    backdrop-filter: blur(1px);
+    backdrop-filter: blur(2px);
   }
   .modal-card{
     position:relative;
@@ -220,7 +238,6 @@
   </header>
 
   <form id="billingForm" method="POST">
-    <!-- CUSTOMER -->
     <div class="customer-row">
       <div class="field">
         <label>Customer</label>
@@ -253,7 +270,6 @@
       </div>
     </div>
 
-    <!-- PRODUCTS -->
     <div class="products-header">
       <div><strong>Products</strong> <span class="small"> — add items using the blue button</span></div>
       <div class="small">Click <em>Remove</em> to delete a line</div>
@@ -277,7 +293,6 @@
       </table>
     </div>
 
-    <!-- TOTALS -->
     <div class="bottom-row">
       <div class="small">Tip: use the <strong>Add Product</strong> button — table scrolls so the form won't jump.</div>
       <div class="totals-card">
@@ -294,7 +309,7 @@
   </form>
 </div>
 
-<!-- PRODUCT MODAL -->
+<!-- Product Modal (unchanged) -->
 <div class="modal" id="productModal">
   <div class="modal-backdrop" onclick="closeProductModal()"></div>
   <div class="modal-card">
@@ -413,11 +428,6 @@ function submitForm(){
   }
   document.getElementById('billingForm').submit();
 }
-// Auto-hide flash messages after 3 seconds
-    document.addEventListener("DOMContentLoaded", () => {
-      const alerts = document.querySelectorAll('.alert');
-      alerts.forEach(alert => setTimeout(() => alert.remove(), 3000));
-    });
 </script>
 
 </body>

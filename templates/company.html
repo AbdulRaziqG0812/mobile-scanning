@@ -2,146 +2,194 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Company Settings</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
   <style>
-    /* ===== BODY ===== */
+    /* 🌙 Smooth gradient dark background (lighter & softer) */
     body {
       font-family: "Poppins", sans-serif;
-      background: linear-gradient(135deg, #b3e5fc, #e1f5fe);
+      margin: 0;
+      padding: 40px 20px;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1b2735, #2c3e50, #243b55);
+      background-size: 400% 400%;
+      animation: gradientFlow 18s ease infinite;
       display: flex;
       justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      margin: 0;
+      align-items: flex-start;
+      color: #eaeaea;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255,255,255,0.15) transparent; /* Firefox */
     }
 
-    /* ===== CARD CONTAINER ===== */
+    /* ✅ Remove white scrollbar and match dark theme */
+    body::-webkit-scrollbar {
+      width: 8px;
+      background: transparent; /* remove white background */
+    }
+
+    body::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 4px;
+    }
+
+    body::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    body::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    @keyframes gradientFlow {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* 🪩 Glassmorphic Container */
     .container {
-      background: #ffffff;
       width: 100%;
-      max-width: 450px;
-      padding: 30px 25px; /* ✅ compact padding */
-      border-radius: 15px;
-      box-shadow: 0 6px 25px rgba(0, 0, 0, 0.12);
-      animation: fadeIn 0.6s ease-in-out;
+      max-width: 950px;
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 16px;
+      padding: 40px 50px;
+      box-shadow: 0 10px 35px rgba(0, 0, 0, 0.6);
     }
 
-    /* ===== HEADING ===== */
+    /* Header */
     h2 {
       text-align: center;
-      color: #007bff;
-      font-size: 24px;
+      color: #00c6ff;
+      font-size: 30px;
       font-weight: 700;
-      margin-bottom: 20px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 35px;
+      text-shadow: 0 0 18px rgba(0, 198, 255, 0.5);
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      gap: 10px;
     }
 
-    /* ===== LABELS ===== */
+    /* Form grid layout */
+    form {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px 30px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+
     label {
-      font-weight: 600;
       font-size: 14px;
-      color: #333;
-      margin-top: 10px;
-      display: block;
+      font-weight: 600;
+      color: #f0f0f0;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
 
-    /* ===== INPUTS & TEXTAREAS ===== */
     input,
     textarea {
-      width: 400px;
+      width: 90%;
       padding: 10px 12px;
-      margin-top: 5px;
-      border: 1.5px solid #d0d7de;
       border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
       font-size: 14px;
-      background: #fdfdfd;
       outline: none;
-      transition: 0.3s;
+      transition: all 0.3s ease;
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+      color: #a0a0a0;
     }
 
     input:focus,
     textarea:focus {
-      border-color: #007bff;
-      box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.15);
-      background: #fff;
+      border-color: #00c6ff;
+      box-shadow: 0 0 6px rgba(0, 198, 255, 0.4);
+    }
+
+    input:hover,
+    textarea:hover {
+      background: rgba(255, 255, 255, 0.12);
     }
 
     textarea {
-      resize: vertical; /* ✅ vertical resize only */
-      min-height: 70px; /* ✅ smaller height */
-      max-height: 200px;
-      overflow-y: auto;
+      resize: none;
+      min-height: 80px;
     }
 
-    /* ===== BUTTON ===== */
+    /* 💾 Button styling */
     button {
-      width: 100%;
-      margin-top: 20px;
-      background: linear-gradient(90deg, #007bff, #0056b3);
-      color: white;
-      border: none;
-      border-radius: 8px;
+      grid-column: span 2;
+      width: 250px;
+      margin: 25px auto 0;
       padding: 12px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(90deg, #00c6ff, #0072ff);
+      color: white;
       font-size: 15px;
       font-weight: 600;
       cursor: pointer;
-      transition: 0.3s;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      box-shadow: 0 5px 20px rgba(0, 198, 255, 0.35);
     }
 
     button:hover {
-      background: linear-gradient(90deg, #0056b3, #004099);
       transform: translateY(-2px);
-      box-shadow: 0 6px 18px rgba(0, 91, 187, 0.3);
+      box-shadow: 0 8px 25px rgba(0, 198, 255, 0.45);
     }
 
-    /* ===== FLASH MESSAGES ===== */
+    /* ✅ Flash messages */
     .alert {
-      padding: 10px 12px;
-      margin-bottom: 15px;
+      grid-column: span 2;
+      width: 90%;
+      margin: 0 auto 15px;
+      padding: 12px;
       border-radius: 6px;
-      font-size: 13px;
+      font-size: 14px;
+      text-align: center;
+      font-weight: 500;
       display: flex;
       align-items: center;
+      justify-content: center;
       gap: 8px;
     }
 
     .alert-success {
-      background: #d4edda;
-      color: #155724;
-      border: 1px solid #c3e6cb;
+      background: rgba(0, 128, 0, 0.4);
+      border: 1px solid #28a745;
+      color: #caffc9;
     }
 
     .alert-error {
-      background: #f8d7da;
-      color: #721c24;
-      border: 1px solid #f5c6cb;
+      background: rgba(128, 0, 0, 0.4);
+      border: 1px solid #dc3545;
+      color: #ffc9c9;
     }
 
-    /* ===== ANIMATION ===== */
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(15px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* ===== RESPONSIVE ===== */
-    @media (max-width: 500px) {
-      .container {
-        padding: 25px 18px;
-      }
-
-      h2 {
-        font-size: 20px;
-      }
-
-      button {
-        font-size: 14px;
-        padding: 10px;
-      }
+    /* 📱 Responsive Design */
+    @media (max-width: 768px) {
+      form { grid-template-columns: 1fr; }
+      input, textarea { width: 100%; }
+      button { width: 100%; }
     }
   </style>
 </head>
@@ -150,7 +198,6 @@
   <div class="container">
     <h2><i class="fa-solid fa-building"></i> Company Settings</h2>
 
-    <!-- Flash Messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
         {% for category, message in messages %}
@@ -162,29 +209,82 @@
       {% endif %}
     {% endwith %}
 
-    <!-- FORM -->
     <form method="POST">
-      <label><i class="fa-solid fa-store"></i> Shop Name:</label>
-      <input type="text" name="name" placeholder="Enter shop name" required>
+      <div class="form-group">
+        <label><i class="fa-solid fa-store"></i> Company Name (English):</label>
+        <input type="text" name="name" value="{{ company.name or '' }}" placeholder="Enter company name in English" required>
+      </div>
 
-      <label><i class="fa-solid fa-location-dot"></i> Address:</label>
-      <textarea name="address" placeholder="Enter shop address" required></textarea>
+      <div class="form-group">
+        <label><i class="fa-solid fa-language"></i> Company Name (Arabic):</label>
+        <input type="text" name="name_ar" value="{{ company.name_ar or '' }}" placeholder="Enter company name in Arabic"required>
+      </div>
 
-      <label><i class="fa-solid fa-phone"></i> Phone:</label>
-      <input type="text" name="phone" placeholder="Enter phone number" required>
+      <div class="form-group">
+        <label><i class="fa-solid fa-file-signature"></i> VAT Number:</label>
+        <input type="text" name="vat_no" value="{{ company.vat_no or '' }}" placeholder="Enter VAT number"required>
+      </div>
 
-      <label><i class="fa-solid fa-envelope"></i> Email:</label>
-      <input type="email" name="email" placeholder="Enter email address" required>
+      <div class="form-group">
+        <label><i class="fa-solid fa-briefcase"></i> C.R. Number:</label>
+        <input type="text" name="cr_no" value="{{ company.cr_no or '' }}" placeholder="Enter commercial registration number"required>
+      </div>
 
-      <label><i class="fa-solid fa-file-contract"></i> Terms & Conditions:</label>
-      <textarea name="terms" placeholder="Enter terms and conditions" required></textarea>
+      <div class="form-group">
+        <label><i class="fa-solid fa-mailbox"></i> P.O. Box:</label>
+        <input type="text" name="po_box" value="{{ company.po_box or '' }}" placeholder="Enter P.O. Box number"required>
+      </div>
+
+      <div class="form-group">
+        <label><i class="fa-solid fa-map-pin"></i> Postal Code:</label>
+        <input type="text" name="postal_code" value="{{ company.postal_code or '' }}" placeholder="Enter postal code"required>
+      </div>
+
+      <div class="form-group">
+        <label><i class="fa-solid fa-globe"></i> Country:</label>
+        <input type="text" name="country" value="{{ company.country or '' }}" placeholder="Enter country name"required>
+      </div>
+
+      <div class="form-group">
+        <label><i class="fa-solid fa-phone"></i> Phone:</label>
+        <input type="text" name="phone" value="{{ company.phone or '' }}" placeholder="Enter phone number"required>
+      </div>
+
+      <div class="form-group">
+        <label><i class="fa-solid fa-envelope"></i> Email:</label>
+        <input type="email" name="email" value="{{ company.email or '' }}" placeholder="Enter company email address"required>
+      </div>
+
+      <div class="form-group">
+        <label><i class="fa-brands fa-instagram"></i> Instagram:</label>
+        <input type="text" name="instagram" value="{{ company.instagram or '' }}" placeholder="Enter Instagram profile link"required>
+      </div>
+
+      <div class="form-group">
+        <label><i class="fa-brands fa-facebook"></i> Facebook:</label>
+        <input type="text" name="facebook" value="{{ company.facebook or '' }}" placeholder="Enter Facebook page link"required>
+      </div>
+
+      <div class="form-group">
+        <label><i class="fa-brands fa-snapchat"></i> Snapchat:</label>
+        <input type="text" name="snapchat" value="{{ company.snapchat or '' }}" placeholder="Enter Snapchat username"required>
+      </div>
+
+      <div class="form-group" style="grid-column: span 2;">
+        <label><i class="fa-solid fa-location-dot"></i> Address:</label>
+        <textarea name="address" placeholder="Enter company address" required>{{ company.address or '' }}</textarea>
+      </div>
+
+      <div class="form-group" style="grid-column: span 2;">
+        <label><i class="fa-solid fa-file-contract"></i> Terms & Conditions:</label>
+        <textarea name="terms" placeholder="Enter terms and conditions" required>{{ company.terms or '' }}</textarea>
+      </div>
 
       <button type="submit"><i class="fa-solid fa-floppy-disk"></i> Save Settings</button>
     </form>
   </div>
 
-  <script> 
-    // Auto-hide flash messages after 3 seconds
+  <script>
     document.addEventListener("DOMContentLoaded", () => {
       const alerts = document.querySelectorAll('.alert');
       alerts.forEach(alert => setTimeout(() => alert.remove(), 3000));

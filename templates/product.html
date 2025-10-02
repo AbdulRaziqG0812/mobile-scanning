@@ -4,119 +4,198 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Product Entry</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 <style>
+  /* 🌙 Background */
   body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #e3f2fd, #f0f4f8);
-    padding: 40px 15px;
+    font-family: "Poppins", sans-serif;
+    margin: 0;
+    padding: 40px 20px;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1b2735, #2c3e50, #243b55);
+    background-size: 400% 400%;
+    animation: gradientFlow 18s ease infinite;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    color: #eaeaea;
+    overflow-y: auto;
   }
 
+  @keyframes gradientFlow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  /* 🧊 Glassmorphic container */
   .form-container {
-    background: #fff;
-    max-width: 900px;
-    margin: auto;
-    padding: 30px 35px;
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 18px;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+    padding: 40px 45px;
+    max-width: 950px;
+    width: 100%;
+    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.6);
+    animation: fadeIn 0.6s ease-in-out;
   }
 
-  .form-container h2 {
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Header */
+  h2 {
     text-align: center;
-    color: #0d6efd;
-    margin-bottom: 20px;
+    color: #00c6ff;
+    font-size: 28px;
     font-weight: 700;
-    font-size: 24px;
+    text-transform: uppercase;
+    margin-bottom: 25px;
+    text-shadow: 0 0 18px rgba(0, 198, 255, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  /* Form grid */
+  form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px 25px; /* ✅ Added proper row + column gap */
   }
 
   label {
+    font-size: 13px;
     font-weight: 600;
-    margin-bottom: 4px;
-    color: #333;
-    font-size: 13px;
+    color: #f0f0f0;
+    display: block;
+    margin-bottom: 6px;
   }
 
-  .form-control, .form-select {
-    border-radius: 7px;
-    padding: 8px 10px;
-    font-size: 13px;
-    border: 1.3px solid #d0d7de;
-    transition: all 0.3s ease;
+  input, select {
+    width: 250px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.18);
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+    font-size: 14px;
+    outline: none;
+    transition: 0.3s;
   }
 
-  .form-control:focus, .form-select:focus {
-    border-color: #0d6efd;
-    box-shadow: 0 0 5px rgba(13, 110, 253, 0.25);
+  input:focus, select:focus {
+    border-color: #00c6ff;
+    box-shadow: 0 0 6px rgba(0,198,255,0.4);
+  }
+
+  input:hover, select:hover {
+    background: rgba(255,255,255,0.12);
+  }
+
+  /* ✅ Buttons row (side by side) */
+  .btn-group {
+    grid-column: span 2; /* takes full width on desktop */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin-top: 10px;
+  }
+
+  .btn-submit, .btn-back {
+    flex: 1;
+    max-width: 250px;
+    text-align: center;
+    padding: 12px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: 0.3s;
+    cursor: pointer;
   }
 
   .btn-submit {
-    background: #0d6efd;
-    color: #fff;
-    font-weight: 600;
-    padding: 10px;
-    border-radius: 8px;
     border: none;
-    font-size: 14px;
-    width: 100%;
-    transition: all 0.3s ease;
+    background: linear-gradient(90deg, #00c6ff, #0072ff);
+    color: #fff;
+    box-shadow: 0 5px 20px rgba(0,198,255,0.35);
   }
 
   .btn-submit:hover {
-    background: #0b5ed7;
     transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(13, 110, 253, 0.25);
+    box-shadow: 0 8px 25px rgba(0,198,255,0.45);
   }
 
   .btn-back {
-    background: #6c757d;
+    background: rgba(255,255,255,0.1);
     color: #fff;
-    font-weight: 600;
-    padding: 10px 18px;
-    border-radius: 8px;
-    border: none;
-    font-size: 14px;
-    transition: all 0.3s ease;
     text-decoration: none;
-    display: inline-block;
   }
 
   .btn-back:hover {
-    background: #5a6268;
-    text-decoration: none;
-    color: #fff;
+    background: rgba(255,255,255,0.2);
+    transform: translateY(-2px);
   }
 
+  /* Alerts */
   .alert {
-    border-radius: 10px;
-    font-size: 13px;
+    width: 100%;
+    margin-bottom: 15px;
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 14px;
+    text-align: center;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
   }
+
+  .alert-success {
+    background: rgba(0, 128, 0, 0.4);
+    border: 1px solid #28a745;
+    color: #caffc9;
+  }
+
+  .alert-danger {
+    background: rgba(128, 0, 0, 0.4);
+    border: 1px solid #dc3545;
+    color: #ffc9c9;
+  }
+
 </style>
 </head>
+
 <body>
 
-<div class="form-container">
-  <h2><i class="fa-solid fa-mobile-screen-button"></i> Product Entry</h2>
+  <div class="form-container">
+    <h2><i class="fa-solid fa-mobile-screen-button"></i> Product Entry</h2>
 
-  <!-- Flash Messages -->
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      {% for category, msg in messages %}
-        <div class="alert alert-{{ 'success' if category=='success' else 'danger' }} alert-dismissible fade show" role="alert">
-          {{ msg }}
-          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-      {% endfor %}
-    {% endif %}
-  {% endwith %}
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, msg in messages %}
+          <div class="alert alert-{{ category }}">
+            <i class="fa-solid {% if category == 'success' %}fa-circle-check{% else %}fa-triangle-exclamation{% endif %}"></i>
+            {{ msg }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
 
-  <form method="POST" action="/product">
-    <div class="row g-3">
-      
-      <div class="col-md-12">
-        <label for="category">Select Category</label>
-        <select name="category" id="category" class="form-select" required>
+    <form method="POST" action="/product">
+      <div>
+        <label for="category"><i class="fa-solid fa-layer-group"></i> Select Category</label>
+        <select name="category" id="category" required>
           <option value="">-- Select Category --</option>
           {% for cat in categories %}
             <option value="{{ cat.category_name }}">{{ cat.category_name }}</option>
@@ -124,76 +203,71 @@
         </select>
       </div>
 
-      <div class="col-md-6">
-        <label for="iphone_model">Model</label>
-        <input type="text" name="iphone_model" id="iphone_model" placeholder="Enter Model" class="form-control">
+      <div>
+        <label for="iphone_model"><i class="fa-solid fa-mobile"></i> Model</label>
+        <input type="text" name="iphone_model" id="iphone_model" placeholder="Enter Model"required>
       </div>
 
-      <div class="col-md-6">
-        <label for="iphone_storage">Storage</label>
-        <input type="text" name="iphone_storage" id="iphone_storage" placeholder="Enter Storage" class="form-control">
+      <div>
+        <label for="iphone_storage"><i class="fa-solid fa-sd-card"></i> Storage</label>
+        <input type="text" name="iphone_storage" id="iphone_storage" placeholder="Enter Storage"required>
       </div>
 
-      <!-- Purchase Price -->
-      <div class="col-md-6">
-        <label for="iphone_purchase_price">Purchase Price</label>
-        <input type="number" name="iphone_purchase_price" id="iphone_purchase_price" placeholder="Enter Purchase Price" class="form-control">
+      <div>
+        <label for="iphone_purchase_price"><i class="fa-solid fa-cart-arrow-down"></i> Purchase Price</label>
+        <input type="number" name="iphone_purchase_price" id="iphone_purchase_price" placeholder="Enter Purchase Price"required>
       </div>
 
-      <!-- Sale Price -->
-      <div class="col-md-6">
-        <label for="iphone_sale_price">Sale Price</label>
-        <input type="number" name="iphone_sale_price" id="iphone_sale_price" placeholder="Enter Sale Price" class="form-control">
+      <div>
+        <label for="iphone_sale_price"><i class="fa-solid fa-dollar-sign"></i> Sale Price</label>
+        <input type="number" name="iphone_sale_price" id="iphone_sale_price" placeholder="Enter Sale Price"required>
       </div>
 
-      <div class="col-md-6">
-        <label for="iphone_imei">IMEI</label>
-        <input type="number" name="iphone_imei" id="iphone_imei" placeholder="Enter IMEI" class="form-control">
+      <div>
+        <label for="iphone_imei"><i class="fa-solid fa-barcode"></i> IMEI</label>
+        <input type="number" name="iphone_imei" id="iphone_imei" placeholder="Enter IMEI"required>
       </div>
 
-      <div class="col-md-6">
-        <label for="iphone_color">Color</label>
-        <input type="text" name="iphone_color" id="iphone_color" placeholder="Enter Color" class="form-control">
+      <div>
+        <label for="iphone_color"><i class="fa-solid fa-palette"></i> Color</label>
+        <input type="text" name="iphone_color" id="iphone_color" placeholder="Enter Color"required>
       </div>
 
-      <div class="col-md-6">
-        <label for="iphone_stock">Stock Quantity</label>
-        <input type="number" name="iphone_stock" id="iphone_stock" placeholder="Enter Stock Quantity" class="form-control">
+      <div>
+        <label for="iphone_stock"><i class="fa-solid fa-boxes-stacked"></i> Stock Quantity</label>
+        <input type="number" name="iphone_stock" id="iphone_stock" placeholder="Enter Stock Quantity"required>
       </div>
 
-      <div class="col-md-6">
-        <label for="iphone_battery_health">Battery Health</label>
-        <input type="text" name="iphone_battery_health" id="iphone_battery_health" placeholder="Enter Battery Health %" class="form-control">
+      <div>
+        <label for="iphone_battery_health"><i class="fa-solid fa-battery-half"></i> Battery Health</label>
+        <input type="text" name="iphone_battery_health" id="iphone_battery_health" placeholder="Enter Battery Health %"required>
       </div>
 
-      <!-- Serial Number and Display Size side by side -->
-      <div class="col-md-6">
-        <label for="iphone_serial">Serial Number</label>
-        <input type="text" name="iphone_serial" id="iphone_serial" placeholder="Enter Serial Number" class="form-control">
+      <div>
+        <label for="iphone_serial"><i class="fa-solid fa-barcode"></i> Serial Number</label>
+        <input type="text" name="iphone_serial" id="iphone_serial" placeholder="Enter Serial Number"required>
       </div>
 
-      <div class="col-md-6">
-        <label for="iphone_display_size">Display Size</label>
-        <input type="text" name="iphone_display_size" id="iphone_display_size" placeholder="Enter Display Size" class="form-control">
+      <div>
+        <label for="iphone_display_size"><i class="fa-solid fa-tv"></i> Display Size</label>
+        <input type="text" name="iphone_display_size" id="iphone_display_size" placeholder="Enter Display Size"required>
       </div>
 
-      <div class="col-md-6">
-        <button type="submit" class="btn-submit mt-2"><i class="fa-solid fa-floppy-disk"></i> Save Product</button>
+      <!-- ✅ Buttons Row -->
+      <div class="btn-group">
+        <button type="submit" class="btn-submit"><i class="fa-solid fa-floppy-disk"></i> Save Product</button>
+        <a href="/product_list" class="btn-back"><i class="fa-solid fa-arrow-left"></i> Back to List</a>
       </div>
-      <div class="col-md-6 text-end">
-        <a href="/product_list" class="btn-back mt-2"><i class="fa-solid fa-arrow-left"></i> Back to List</a>
-      </div>
-    </div>
-  </form>
-</div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-  // Auto-hide flash messages after 3 seconds
-  document.addEventListener("DOMContentLoaded", () => {
-    const flashes = document.querySelectorAll('.alert');
-    flashes.forEach(flash => setTimeout(() => flash.remove(), 3000));
-  });
-</script>
+
+    </form>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const alerts = document.querySelectorAll('.alert');
+      alerts.forEach(alert => setTimeout(() => alert.remove(), 3000));
+    });
+  </script>
 
 </body>
 </html>

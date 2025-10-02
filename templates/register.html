@@ -202,6 +202,13 @@
           <i class="fa-solid fa-eye-slash toggle-password" data-target="confirm"></i>
         </div>
       </div>
+        <!-- 🔑 Registration Key Field -->
+      <div class="form-group">
+        <div class="input-field">
+          <i class="fa-solid fa-key left-icon"></i>
+          <input type="text" id="register_key" name="register_key" placeholder="Enter registration key" required>
+        </div>
+      </div>
 
       <button type="submit"><i class="fa-solid fa-user-plus"></i> Register</button>
     </form>
@@ -229,6 +236,11 @@
         }
       }
     });
+  });
+  
+    document.addEventListener("DOMContentLoaded", () => {
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => setTimeout(() => alert.remove(), 3000));
   });
 </script>
 

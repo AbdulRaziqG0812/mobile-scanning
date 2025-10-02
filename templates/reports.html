@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Reports - Sales Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f0f2f5; padding: 20px; }
+  h2 { text-align: center; color: #004aad; margin-bottom: 30px; }
+  form { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-bottom: 25px; }
+  input[type="month"], button { padding: 10px 15px; border-radius: 8px; border: 1px solid #ccc; font-size: 14px; }
+  button { background: #004aad; color: white; cursor: pointer; border: none; transition: 0.3s; }
+  button:hover { background: #003380; }
+  
+  .summary { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; margin-bottom: 30px; }
+  .card { background: white; border-radius: 12px; padding: 20px; flex: 1 1 180px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+  .card h3 { margin-bottom: 10px; color: #333; font-size: 18px; }
+  .card p { font-size: 20px; font-weight: bold; margin: 0; }
+
+  .charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; margin-top: 30px; }
+
+  canvas { background: white; border-radius: 12px; padding: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 100% !important; height: 280px !important; }
+
+  table { width: 100%; border-collapse: collapse; margin-top: 40px; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 3px 10px rgba(0,0,0,0.05); }
+  th, td { padding: 12px; border-bottom: 1px solid #eee; text-align: center; }
+  th { background: #004aad; color: white; }
+  tr:hover { background: #f1f7ff; }
+  .highlight { background-color: #d1e7dd !important; }
+</style>
+</head>
+<body>
+
+<h2>📊 Sales Dashboard</h2>
+
+<form method="POST" action="/reports">
+  <input type="month" name="month" value="{{ selected_month or '' }}">
+  <button type="submit">Show Report</button>
+</form>
+
+<!-- Summary Cards -->
+<div class="summary">
+  <div class="card"><h3>💰 Total Sales</h3><p>{{ "%.2f"|format(total_sales or 0) }}</p></div>
+  <div class="card"><h3>🛒 Total Purchase</h3><p>{{ "%.2f"|format(total_purchase or 0) }}</p></div>
+  <div class="card"><h3>📈 Total Profit</h3><p>{{ "%.2f"|format(total_profit or 0) }}</p></div>
+  <div class="card"><h3>📦 Units Sold</h3><p>{{ total_units or 0 }}</p></div>
+</div>
+
+<!-- Charts Section -->
+<div class="charts">
+  <!-- Sales vs Purchase -->
+  <canvas id="salesPurchaseChart"></canvas>
+
+  <!-- Profit Bar Chart (Gradient) -->
+  <canvas id="profitChart"></canvas>
+
+  <!-- Units Sold -->
+  <canvas id="unitsChart"></canvas>
+
+  <!-- Profit vs Purchase Pie -->
+  <canvas id="profitPieChart"></canvas>
+</div>
+
+<script>
+const labels = {{ chart_labels|tojson }};
+const sales = {{ sales_data|tojson }};
+const purchase = {{ purchase_data|tojson }};
+const profit = {{ profit_data|tojson }};
+const units = {{ units_data|tojson }};
+
+// Gradient for Profit Chart
+const ctxProfit = document.getElementById('profitChart').getContext('2d');
+const gradient = ctxProfit.createLinearGradient(0, 0, 0, 300);
+gradient.addColorStop(0, 'rgba(40,167,69,0.8)');
+gradient.addColorStop(1, 'rgba(40,167,69,0.2)');
+
+// Sales vs Purchase Chart
+new Chart(document.getElementById('salesPurchaseChart'), {
+  type: 'bar',
+  data: {
+    labels,
+    datasets: [
+      { label: 'Sales', data: sales, backgroundColor: '#007bff' },
+      { label: 'Purchase', data: purchase, backgroundColor: '#ff9800' }
+    ]
+  },
+  options: { responsive: true, plugins: { title: { display: true, text: 'Sales vs Purchase' } } }
+});
+
+// Profit Gradient Bar Chart
+new Chart(ctxProfit, {
+  type: 'bar',
+  data: {
+    labels,
+    datasets: [{ 
+      label: 'Profit', 
+      data: profit, 
+      backgroundColor: gradient,
+      borderRadius: 8
+    }]
+  },
+  options: { responsive: true, plugins: { title: { display: true, text: 'Profit Trend' } } }
+});
+
+// Units Sold Chart
+new Chart(document.getElementById('unitsChart'), {
+  type: 'bar',
+  data: { labels, datasets: [{ label: 'Units Sold', data: units, backgroundColor: '#ffc107', borderRadius: 6 }] },
+  options: { responsive: true, plugins: { title: { display: true, text: 'Units Sold' } } }
+});
+
+// Profit vs Purchase Pie
+new Chart(document.getElementById('profitPieChart'), {
+  type: 'doughnut',
+  data: { 
+    labels: ['Profit', 'Purchase'], 
+    datasets: [{ 
+      data: [{{ total_profit|tojson or 0 }}, {{ total_purchase|tojson or 0 }}], 
+      backgroundColor: ['#28a745', '#ff9800'] 
+    }] 
+  },
+  options: { responsive: true, plugins: { title: { display: true, text: 'Overall Profit vs Purchase' } } }
+});
+</script>
+
+</body>
+</html>

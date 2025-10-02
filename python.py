@@ -1,7 +1,8 @@
 from datetime import datetime
-from flask import Flask, flash, jsonify, request, render_template, redirect, url_for
+from flask import Flask, flash, jsonify, request, render_template, redirect, session, url_for
+from werkzeug.security import generate_password_hash, check_password_hash
 import mysql.connector
-# from werkzeug import Response
+from werkzeug import Response
 
 app = Flask(__name__)
 app.secret_key = "112233"  # kuch bhi random strong string daal do
@@ -66,15 +67,19 @@ def loginpage():
 
         try:
             conn = mysql.connector.connect(**db_config)
-            cursor = conn.cursor(dictionary=True, buffered=True)
+            cursor = conn.cursor(dictionary=True)
 
-            cursor.execute(
-                "SELECT * FROM login WHERE username = %s AND password = %s",
-                (username, password)
-            )
-            existing_user = cursor.fetchone()
+            # 1️⃣ Get user by username only
+            cursor.execute("SELECT * FROM login WHERE username = %s", (username,))
+            user = cursor.fetchone()
 
-            if existing_user:
+            # 2️⃣ Check if user exists and password matches
+            if user and check_password_hash(user['password'], password):
+                # 3️⃣ Save session (login success)
+                session['user_id'] = user['id']
+                session['username'] = user['username']
+                session['role'] = user.get('role', 'user')  # optional, if you use roles
+
                 return redirect(url_for('dashboard'))
             else:
                 flash("Invalid username or password!", "error")
@@ -84,14 +89,15 @@ def loginpage():
             flash(f"Error: {e}", "error")
             return redirect(url_for('loginpage'))
         finally:
-            if cursor:
-                cursor.close()
-            if conn:
-                conn.close()
+            cursor.close()
+            conn.close()
 
     return render_template('loginpage.html')
 
-# route for Register
+# register route
+
+# Secret registration key (sirf authorized logon ko dena)
+REGISTER_KEY = "MAT_OMAN"
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -100,38 +106,60 @@ def register():
         email = request.form.get('email')
         password = request.form.get('password')
         confirm = request.form.get('confirm')
+        entered_key = request.form.get('register_key')
 
+        # 1️⃣ Check registration key
+        if entered_key != REGISTER_KEY:
+            flash("Invalid registration key!", "error")
+            return redirect(url_for('register'))
+
+        # 2️⃣ Check password match
         if password != confirm:
             flash("Passwords do not match!", "error")
             return redirect(url_for('register'))
 
+        # 3️⃣ Check password strength
+        if len(password) < 6:
+            flash("Password must be at least 6 characters long.", "error")
+            return redirect(url_for('register'))
+
         try:
             conn = mysql.connector.connect(**db_config)
-            cursor = conn.cursor()
+            cursor = conn.cursor(dictionary=True)
 
-            # Insert into register table
+            # 4️⃣ Check duplicate username
+            cursor.execute("SELECT * FROM login WHERE username = %s", (username,))
+            existing_user = cursor.fetchone()
+            if existing_user:
+                flash("Username already exists. Please choose another.", "error")
+                return redirect(url_for('register'))
+
+            # 5️⃣ Hash password securely
+            hashed_pw = generate_password_hash(password)
+
+            # 6️⃣ Insert into register table
             cursor.execute(
                 "INSERT INTO register (username, email, password, confirm_password) VALUES (%s, %s, %s, %s)",
-                (username, email, password, confirm)
+                (username, email, hashed_pw, hashed_pw)
             )
 
-            # Also insert into login table
+            # 7️⃣ Insert into login table
             cursor.execute(
                 "INSERT INTO login (username, password) VALUES (%s, %s)",
-                (username, password)
+                (username, hashed_pw)
             )
 
             conn.commit()
-            flash("Registration successful! Please login.", "success")
+ 
+            return redirect(url_for('loginpage'))
 
         except Exception as e:
             flash(f"Error: {e}", "error")
             return redirect(url_for('register'))
+
         finally:
-            if cursor:
-                cursor.close()
-            if conn:
-                conn.close()
+            cursor.close()
+            conn.close()
 
     return render_template("register.html")
 
@@ -153,8 +181,6 @@ def category():
         return redirect(url_for("category"))
 
     return render_template("category.html")
-
-
 
 # ✅ Category List
 @app.route("/category_list")
@@ -245,11 +271,13 @@ def product():
             ))
 
             conn.commit()
+
+            # ✅ Success message + redirect (prevents double entry)
             flash("✅ Product added successfully!", "success")
-            return redirect(url_for('product'))  # ✅ Redirect to product list
+            return redirect(url_for('product'))  # 🔥 This stops duplicate on refresh
 
     except Exception as e:
-        flash(f"⚠️ Error adding product: {e}", "error")
+        flash(f"⚠️ Error adding product: {e}", "danger")
 
     finally:
         if cursor:
@@ -257,8 +285,8 @@ def product():
         if conn:
             conn.close()
 
+    # ✅ Render form page
     return render_template('product.html', categories=categories)
-
 
 # ✅ Product List Route
 @app.route('/product_list')
@@ -658,14 +686,29 @@ def billing_list():
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor(dictionary=True)
 
-    # Fetch bills with customer info
+    # ✅ Calculate totals
     cursor.execute("""
-        SELECT b.bill_id, b.bill_date,
-               c.name AS customer_name,
-               c.mobile AS customer_mobile,
-               c.Contact AS customer_contact,
-               c.address AS customer_address,
-               b.subtotal, b.discount, b.net_total
+        SELECT 
+            IFNULL(SUM(subtotal), 0) AS sub_total,
+            IFNULL(SUM(net_total), 0) AS net_total
+        FROM bills
+    """)
+    totals = cursor.fetchone()
+    sub_total = totals["sub_total"]
+    net_total = totals["net_total"]
+
+    # ✅ Fetch bills with customer info
+    cursor.execute("""
+        SELECT 
+            b.bill_id, 
+            b.bill_date,
+            c.name AS customer_name,
+            c.mobile AS customer_mobile,
+            c.Contact AS customer_contact,
+            c.address AS customer_address,
+            b.subtotal, 
+            b.discount, 
+            b.net_total
         FROM bills b
         JOIN customers c ON b.customer_id = c.customer_id
         ORDER BY b.bill_date DESC
@@ -673,16 +716,19 @@ def billing_list():
     """)
     bills = cursor.fetchall()
 
-    # Fetch related items for each bill
+    # ✅ Fetch related items for each bill
     bill_items = {}
     for bill in bills:
         cursor.execute("""
-            SELECT bi.qty, bi.product_price AS price, bi.amount,
-                   bi.product_model,
-                   bi.product_storage,
-                   bi.product_color,
-                   bi.product_imei,
-                   bi.product_serial
+            SELECT 
+                bi.qty, 
+                bi.product_price AS price, 
+                bi.amount,
+                bi.product_model,
+                bi.product_storage,
+                bi.product_color,
+                bi.product_imei,
+                bi.product_serial
             FROM bill_items bi
             WHERE bi.bill_id = %s
         """, (bill['bill_id'],))
@@ -690,8 +736,15 @@ def billing_list():
 
     cursor.close()
     conn.close()
-    return render_template("billing_list.html", bills=bills, bill_items=bill_items)
 
+    # ✅ Pass totals to template also
+    return render_template(
+        "billing_list.html", 
+        bills=bills, 
+        bill_items=bill_items, 
+        sub_total=sub_total, 
+        net_total=net_total
+    )
 
 # ---------- DELETE BILL ----------
 @app.route('/delete_bill/<int:bill_id>', methods=['GET'])
@@ -782,66 +835,218 @@ def invoice(bill_id):
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor(dictionary=True)
 
+        # ✅ Get company info (only one active record)
+    cursor.execute("SELECT * FROM company_settings ORDER BY id DESC LIMIT 1")
+    company = cursor.fetchone()
+
     # Get bill info
-    cursor.execute("SELECT * FROM bills WHERE bill_id=%s", (bill_id,))
+    cursor.execute("""
+        SELECT 
+            b.bill_id, 
+            b.bill_date,
+            b.customer_name, 
+            b.customer_mobile,
+            b.customer_contact,
+            b.customer_address,
+            b.subtotal,
+            b.discount,
+            b.net_total
+        FROM bills b
+        WHERE b.bill_id = %s
+    """, (bill_id,))
     bill = cursor.fetchone()
 
-    # Get customer info
-    cursor.execute("""
-        SELECT c.name AS customer_name, c.mobile AS customer_mobile, c.contact AS customer_contact, c.address AS customer_address
-        FROM bills b
-        JOIN customers c ON b.customer_id = c.customer_id
-        WHERE b.bill_id=%s
-    """, (bill_id,))
-    customer = cursor.fetchone()
+    if not bill:
+        return "Bill not found", 404
 
     # Get bill items
-    cursor.execute("SELECT * FROM bill_items WHERE bill_id=%s", (bill_id,))
+    cursor.execute("""
+        SELECT 
+            bi.item_id,
+            bi.product_id,
+            bi.product_model,
+            bi.product_storage,
+            bi.product_price,
+            bi.product_serial,
+            bi.product_imei,
+            bi.product_color,
+            bi.qty,
+            bi.amount
+        FROM bill_items bi
+        WHERE bi.bill_id = %s
+    """, (bill_id,))
     items = cursor.fetchall()
-
-    # Get company info
-    cursor.execute("SELECT * FROM company_settings LIMIT 1")
-    company = cursor.fetchone()
 
     cursor.close()
     conn.close()
 
-    return render_template("invoice.html", bill=bill, customer=customer, items=items, company=company)
+    return render_template("invoice.html", bill=bill, items=items,company=company)
 
 
 
 # create company route
-
 @app.route("/company", methods=["GET", "POST"])
 def company():
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
+
+    # 🔹 Check if company settings already exist (only one record expected)
+    cursor.execute("SELECT * FROM company_settings LIMIT 1")
+    company = cursor.fetchone()
+
     if request.method == "POST":
-        # Get form data
+        # 🔹 Get all form fields
         name = request.form.get("name", "")
-        address = request.form.get("address", "")
+        name_ar = request.form.get("name_ar", "")
+        vat_no = request.form.get("vat_no", "")
+        cr_no = request.form.get("cr_no", "")
+        po_box = request.form.get("po_box", "")
+        postal_code = request.form.get("postal_code", "")
+        country = request.form.get("country", "")
         phone = request.form.get("phone", "")
         email = request.form.get("email", "")
+        instagram = request.form.get("instagram", "")
+        facebook = request.form.get("facebook", "")
+        snapchat = request.form.get("snapchat", "")
+        address = request.form.get("address", "")
         terms = request.form.get("terms", "")
 
-        # Connect to DB
-        conn = mysql.connector.connect(**db_config)
-        cursor = conn.cursor()
+        # 🔹 If record exists → UPDATE
+        if company:
+            cursor.execute("""
+                UPDATE company_settings
+                SET 
+                    name = %s,
+                    name_ar = %s,
+                    vat_no = %s,
+                    cr_no = %s,
+                    po_box = %s,
+                    postal_code = %s,
+                    country = %s,
+                    phone = %s,
+                    email = %s,
+                    instagram = %s,
+                    facebook = %s,
+                    snapchat = %s,
+                    address = %s,
+                    terms = %s,
+                    updated_at = NOW()
+                WHERE id = %s
+            """, (
+                name, name_ar, vat_no, cr_no, po_box, postal_code, country,
+                phone, email, instagram, facebook, snapchat,
+                address, terms, company["id"]
+            ))
+            flash("Company settings updated successfully!", "success")
 
-        # Insert new company settings
-        cursor.execute("""
-            INSERT INTO company_settings (name, address, phone, email, terms)
-            VALUES (%s, %s, %s, %s, %s)
-        """, (name, address, phone, email, terms))
+        # 🔹 Else → INSERT
+        else:
+            cursor.execute("""
+                INSERT INTO company_settings (
+                    name, name_ar, vat_no, cr_no, po_box, postal_code, country,
+                    phone, email, instagram, facebook, snapchat,
+                    address, terms
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (
+                name, name_ar, vat_no, cr_no, po_box, postal_code, country,
+                phone, email, instagram, facebook, snapchat,
+                address, terms
+            ))
+            flash("Company settings saved successfully!", "success")
 
         conn.commit()
         cursor.close()
         conn.close()
-
-        flash("Company settings saved successfully!", "success")
         return redirect(url_for("company"))
 
-    # For GET request, just show empty form
-    return render_template("company.html", company={})
+    # 🔹 Render form with existing data (if any)
+    cursor.close()
+    conn.close()
+    return render_template("company.html", company=company or {})
+
+# report route
+@app.route('/reports', methods=['GET', 'POST'])
+def reports():
+    selected_month = request.form.get("month")  # format: YYYY-MM
+
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor(dictionary=True)
+
+    # Pick last month with data if none selected
+    if not selected_month:
+        cursor.execute("SELECT DATE_FORMAT(MAX(bill_date), '%Y-%m') AS last_month FROM bills")
+        result = cursor.fetchone()
+        selected_month = result['last_month'] if result['last_month'] else None
+
+    # Query to calculate sales, purchase, profit
+    query = """
+        SELECT 
+            DATE_FORMAT(b.bill_date, '%Y-%m') AS month,
+            SUM(IFNULL(bi.qty,0)) AS total_units,
+            SUM(IFNULL(bi.qty * CAST(bi.product_price AS DECIMAL(12,2)),0)) AS total_sales,
+            SUM(IFNULL(bi.qty * CAST(CASE 
+                    WHEN p.iphone_purchase_price IS NULL OR p.iphone_purchase_price='' THEN 0 
+                    ELSE p.iphone_purchase_price 
+                END AS DECIMAL(12,2)),0)) AS total_purchase,
+            SUM(IFNULL(bi.qty * (CAST(bi.product_price AS DECIMAL(12,2)) - 
+                CAST(CASE 
+                        WHEN p.iphone_purchase_price IS NULL OR p.iphone_purchase_price='' THEN 0 
+                        ELSE p.iphone_purchase_price 
+                    END AS DECIMAL(12,2))
+            ),0)) AS total_profit
+        FROM bills b
+        LEFT JOIN bill_items bi ON b.bill_id = bi.bill_id
+        LEFT JOIN iphone_products p ON bi.product_id = p.product_id
+    """
+
+    params = []
+    if selected_month:
+        query += " WHERE DATE_FORMAT(b.bill_date, '%Y-%m') = %s"
+        params.append(selected_month)
+
+    query += " GROUP BY DATE_FORMAT(b.bill_date, '%Y-%m') ORDER BY DATE_FORMAT(b.bill_date, '%Y-%m') ASC"
+
+    cursor.execute(query, params)
+    data = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    # ✅ Always define chart variables to avoid Jinja2 UndefinedError
+    chart_labels = []
+    sales_data = []
+    purchase_data = []
+    profit_data = []
+    units_data = []
+
+    if data:
+        for row in data:
+            chart_labels.append(row.get('month', 'N/A'))
+            sales_data.append(float(row.get('total_sales') or 0))
+            purchase_data.append(float(row.get('total_purchase') or 0))
+            profit_data.append(float(row.get('total_profit') or 0))
+            units_data.append(int(row.get('total_units') or 0))
+    else:
+        chart_labels = [selected_month or 'No Data']
+        sales_data = [0]
+        purchase_data = [0]
+        profit_data = [0]
+        units_data = [0]
+
+    return render_template(
+        "reports.html",
+        selected_month=selected_month,
+        chart_labels=chart_labels,
+        sales_data=sales_data,
+        purchase_data=purchase_data,
+        profit_data=profit_data,
+        units_data=units_data,
+        total_sales=sum(sales_data),
+        total_purchase=sum(purchase_data),
+        total_profit=sum(profit_data),
+        total_units=sum(units_data)
+    )
+
 
 if __name__ == '__main__':
-    app.run(host="192.168.100.23", debug=True, port=5600)
+    app.run(host="192.168.100.23", debug=True, port=5500)
     # app.run(debug=True)
