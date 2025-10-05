@@ -6,6 +6,9 @@
 <title>Billing — Mobile Shop</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
 <style>
   :root{
     --primary:#0b63d6;
@@ -16,7 +19,6 @@
     --success:#16a34a;
     --danger:#ef4444;
   }
-
   *{box-sizing:border-box;}
   body{
     margin:0;
@@ -29,7 +31,6 @@
     align-items:flex-start;
     padding:40px 15px;
   }
-
   .container{
     width:100%;
     max-width:1100px;
@@ -39,7 +40,6 @@
     box-shadow:0 10px 30px rgba(2,6,23,0.12);
     border:1px solid rgba(11,99,214,0.08);
   }
-
   header.top{
     display:flex;
     justify-content:space-between;
@@ -47,15 +47,8 @@
     gap:12px;
     margin-bottom:18px;
   }
-  header.top h1{
-    margin:0;
-    font-size:22px;
-    color:var(--primary);
-    font-weight:700;
-    letter-spacing:0.5px;
-  }
+  header.top h1{margin:0;font-size:22px;color:var(--primary);font-weight:700;letter-spacing:0.5px;}
   header.top .actions { display:flex; gap:10px; align-items:center; }
-
   .btn{
     background:var(--primary);
     color:#fff;
@@ -69,19 +62,8 @@
   .btn:hover{ background:#084cb6; transform:translateY(-1px); }
   .btn.ghost{ background:transparent; color:var(--primary); border:1px solid rgba(11,99,214,0.3); }
   .btn.danger{ background:var(--danger); }
-
-  .customer-row{
-    display:flex;
-    gap:14px;
-    align-items:flex-end;
-    flex-wrap:wrap;
-    margin-bottom:18px;
-  }
-  .field{
-    display:flex;
-    flex-direction:column;
-    gap:6px;
-  }
+  .customer-row{ display:flex; gap:14px; align-items:flex-end; flex-wrap:wrap; margin-bottom:18px; }
+  .field{ display:flex; flex-direction:column; gap:6px; }
   .field label{ font-size:13px; color:var(--muted); font-weight:600; }
   .field select, .field input{
     padding:9px 12px;
@@ -91,127 +73,62 @@
     background:#fff;
     outline:none;
     transition: box-shadow .15s;
+    font-size:13px;
   }
   .field input[readonly]{ background:#f7f9ff; color:#243b53; }
-
-  .products-header{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-top:6px;
-    margin-bottom:8px;
-  }
-  .table-wrapper{
-    border-radius:10px;
-    overflow:auto;
-    border:1px solid rgba(11,99,214,0.06);
-    max-height:360px;
-    background:#fff;
-  }
-
-  table{
-    width:100%;
-    border-collapse:collapse;
-    table-layout:fixed;
-    min-width:940px;
-  }
+  .products-header{ display:flex; justify-content:space-between; align-items:center; margin-top:6px; margin-bottom:8px; }
+  .table-wrapper{ border-radius:10px; overflow:auto; border:1px solid rgba(11,99,214,0.06); max-height:360px; background:#fff; }
+  table{ width:100%; border-collapse:collapse; table-layout:fixed; min-width:940px; }
   thead th{
-    position:sticky;
-    top:0;
-    background:var(--primary);
-    color:white;
-    text-align:left;
-    padding:12px 14px;
-    font-weight:700;
-    font-size:13px;
+    position:sticky; top:0; background:var(--primary); color:white;
+    text-align:left; padding:12px 14px; font-weight:700; font-size:13px;
   }
-  tbody td{
-    padding:10px 12px;
-    border-bottom:1px solid #f1f5f9;
-    vertical-align:middle;
-    font-size:14px;
-    background:#fcfdff;
-  }
-
+  tbody td{ padding:10px 12px; border-bottom:1px solid #f1f5f9; vertical-align:middle; font-size:14px; background:#fcfdff; }
   .td-center{ text-align:center; }
   .td-right{ text-align:right; }
-
-  .input-compact{
-    width:100%;
-    padding:6px 8px;
-    border:1px solid #e6eefc;
-    border-radius:6px;
-    background:#fff;
-    font-size:13px;
-  }
+  .input-compact{ width:100%; padding:6px 8px; border:1px solid #e6eefc; border-radius:6px; background:#fff; font-size:13px; }
   .readonly{ background:#fbfdff; }
-
   .small{ font-size:13px; color:var(--muted); }
-
-  .bottom-row{
-    display:flex;
-    justify-content:space-between;
-    gap:20px;
-    align-items:center;
-    margin-top:18px;
-    flex-wrap:wrap;
-  }
-  .totals-card{
-    margin-left:auto;
-    min-width:320px;
-    background:#f1f7ff;
-    padding:14px;
-    border-radius:10px;
-    border:1px solid rgba(11,99,214,0.06);
-  }
+  .bottom-row{ display:flex; justify-content:space-between; gap:20px; align-items:center; margin-top:18px; flex-wrap:wrap; }
+  .totals-card{ margin-left:auto; min-width:320px; background:#f1f7ff; padding:14px; border-radius:10px; border:1px solid rgba(11,99,214,0.06); }
   .totals-row{ display:flex; justify-content:space-between; padding:6px 0; font-weight:600; }
   .totals-row.small{ font-weight:500; color:var(--muted); }
-
   .form-actions{ text-align:right; margin-top:16px; }
-
-  .icon-btn{
-    background:transparent;
-    border:none;
-    cursor:pointer;
-    padding:6px;
-    border-radius:6px;
-  }
+  .icon-btn{ background:transparent; border:none; cursor:pointer; padding:6px; border-radius:6px; }
   .icon-btn:hover{ background:#f2f6ff; }
-
-  .modal{
-    position:fixed;
-    inset:0;
-    display:none;
-    align-items:center;
-    justify-content:center;
-    z-index:90;
-  }
+  .modal{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:90; }
   .modal.show{ display:flex; }
-  .modal-backdrop{
-    position:absolute; inset:0; background:rgba(3,7,18,0.25);
-    backdrop-filter: blur(2px);
-  }
-  .modal-card{
-    position:relative;
-    z-index:95;
-    width:640px;
-    max-width:94%;
-    background:var(--card);
-    border-radius:12px;
-    padding:18px;
-    box-shadow:0 20px 60px rgba(2,6,23,0.25);
-  }
+  .modal-backdrop{ position:absolute; inset:0; background:rgba(3,7,18,0.25); backdrop-filter: blur(2px); }
+  .modal-card{ position:relative; z-index:95; width:640px; max-width:94%; background:var(--card); border-radius:12px; padding:18px; box-shadow:0 20px 60px rgba(2,6,23,0.25); }
   .modal-grid{ display:flex; gap:12px; flex-wrap:wrap; }
   .modal-grid .field{ flex:1; min-width:160px; }
-  .stock-badge{
-    font-size:13px;
-    padding:6px 10px;
-    border-radius:8px;
-    display:inline-block;
-    margin-top:6px;
-    background:#f8fafc;
-    color:#083344;
-    border:1px solid rgba(2,6,23,0.06);
+  .stock-badge{ font-size:13px; padding:6px 10px; border-radius:8px; display:inline-block; margin-top:6px; background:#f8fafc; color:#083344; border:1px solid rgba(2,6,23,0.06); }
+
+  /* Select2 custom styling */
+  .select2-container .select2-selection--single {
+    height: 38px !important;
+    border-radius: 8px !important;
+    border: 1px solid #e6eefc !important;
+    padding-right: 100px;
+    display: flex;
+    align-items: center;
+    font-size: 13px !important;
+  }
+  .select2-selection__rendered {
+    font-size: 13px !important;
+    color: #333 !important;
+    padding-left: 8px !important;
+  }
+  .select2-selection__arrow { height: 36px !important; }
+  .select2-dropdown {
+    border-radius: 8px !important;
+    border: 1px solid #e6eefc !important;
+  }
+  .select2-search--dropdown .select2-search__field {
+    border: 1px solid #ddd !important;
+    border-radius: 4px;
+    padding: 5px 8px;
+    font-size: 13px;
   }
 </style>
 </head>
@@ -300,7 +217,7 @@
     <div class="modal-grid" style="margin-bottom:12px;">
       <div class="field">
         <label>Select product</label>
-        <select id="modal_product" onchange="modalFetchProduct(this.value)">
+        <select id="modal_product" onchange="modalFetchProduct(this.value)" required>
           <option value="">— Select product —</option>
           {% for p in products %}
             <option value="{{ p.product_id }}">{{ p.iphone_model }} ({{ p.iphone_storage }}) ({{ p.iphone_imei }})</option>
@@ -327,7 +244,19 @@
   </div>
 </div>
 
+<!-- jQuery and Select2 JS -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 <script>
+$(document).ready(function() {
+  $('#customerSelect, #modal_product').select2({
+    placeholder: "Search...",
+    allowClear: true,
+    width: '100%'
+  });
+});
+
 function fetchCustomer(id){
   if(!id){
     document.getElementById('customer_name').value='';
@@ -348,7 +277,7 @@ function fetchCustomer(id){
 
 function openProductModal(){
   document.getElementById('productModal').classList.add('show');
-  document.getElementById('modal_product').value='';
+  $('#modal_product').val('').trigger('change');
   document.getElementById('modal_price').value='';
   document.getElementById('modal_stock').textContent='—';
   document.getElementById('modal_qty').value='';
@@ -363,7 +292,7 @@ function modalFetchProduct(id){
     .then(data=>{
       document.getElementById('modal_price').value = data.iphone_sale_price || '';
       document.getElementById('modal_stock').textContent = "Stock: " + (data.iphone_stock || 0);
-      document.getElementById('modal_qty').value = 1; // Set 1 when product selected
+      document.getElementById('modal_qty').value = 1;
     });
 }
 
@@ -371,7 +300,6 @@ function addProductFromModal(){
   const pid=document.getElementById('modal_product').value;
   const qty=parseInt(document.getElementById('modal_qty').value)||1;
   if(!pid){ alert('Select product'); return; }
-
   fetch('/get_product/' + pid)
     .then(r=>r.json())
     .then(data=>{
@@ -402,7 +330,6 @@ function rowQtyChanged(input){
   tr.querySelector('input[name="amount[]"]').value=(price*qty).toFixed(2);
   calcTotal();
 }
-
 function calcTotal(){
   let subtotal=0;
   document.querySelectorAll('input[name="amount[]"]').forEach(a=>subtotal+=parseFloat(a.value||0));
@@ -413,7 +340,6 @@ function calcTotal(){
   document.getElementById('net_total').value=net.toFixed(2);
   document.getElementById('net_view').textContent=net.toFixed(2);
 }
-
 function submitForm(){
   if(document.querySelectorAll('input[name="product_id[]"]').length===0){
     alert("Please add at least one product."); return;
