@@ -5,35 +5,50 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Login Page</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
   <style>
+    /* 🌈 Background Gradient Animation */
     body {
       height: 100vh;
       margin: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: 'Poppins', 'Segoe UI', sans-serif;
       display: flex;
       justify-content: center;
       align-items: center;
-      background: linear-gradient(135deg, #e0f0ff, #f5faff);
+      background: linear-gradient(-45deg, #007bff, #00bcd4, #4caf50, #004aad);
+      background-size: 400% 400%;
+      animation: gradientBG 10s ease infinite;
     }
 
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* 🌟 Login Box with Glass Effect */
     .login-container {
-      background: #fff;
-      padding: 45px 40px;
-      border-radius: 14px;
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 18px;
+      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.2);
+      padding: 50px 40px;
       width: 100%;
-      max-width: 400px;
+      max-width: 420px;
       animation: fadeIn 0.8s ease;
+      color: #fff;
     }
 
     h2 {
       text-align: center;
-      color: #004aad;
-      font-size: 28px;
-      margin-bottom: 20px;
+      font-size: 32px;
       font-weight: 700;
+      margin-bottom: 25px;
+      color: #ffffff;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.25);
     }
-    
+
     .form-group {
       margin-bottom: 22px;
     }
@@ -43,20 +58,22 @@
       width: 100%;
     }
 
+    /* 🔹 Input Fields */
     .input-field input {
       width: 100%;
       box-sizing: border-box;
       padding: 14px 45px 14px 45px;
-      border: 1.5px solid #d0d7de;
+      border: none;
       border-radius: 10px;
       font-size: 15px;
       outline: none;
-      transition: border 0.3s, box-shadow 0.3s;
+      color: #222;
+      background: rgba(255, 255, 255, 0.9);
+      transition: all 0.3s ease;
     }
 
     .input-field input:focus {
-      border-color: #007bff;
-      box-shadow: 0 0 0 4px rgba(0,123,255,0.15);
+      box-shadow: 0 0 0 4px rgba(0,123,255,0.3);
     }
 
     .input-field .left-icon {
@@ -64,8 +81,8 @@
       left: 15px;
       top: 50%;
       transform: translateY(-50%);
-      color: #555;
-      font-size: 16px;
+      color: #007bff;
+      font-size: 17px;
     }
 
     .input-field .toggle-password {
@@ -73,15 +90,21 @@
       right: 15px;
       top: 50%;
       transform: translateY(-50%);
-      color: #555;
-      font-size: 16px;
+      color: #007bff;
+      font-size: 17px;
       cursor: pointer;
+      transition: color 0.3s ease;
     }
 
+    .input-field .toggle-password:hover {
+      color: #004aad;
+    }
+
+    /* 🔘 Button */
     button {
       width: 100%;
       padding: 14px;
-      background: #007bff;
+      background: linear-gradient(90deg, #007bff, #00bcd4);
       color: white;
       border: none;
       border-radius: 10px;
@@ -90,41 +113,48 @@
       cursor: pointer;
       transition: all 0.3s ease;
       margin-top: 10px;
-      box-sizing: border-box;
+      box-shadow: 0 4px 14px rgba(0, 91, 187, 0.25);
     }
 
     button:hover {
-      background: #0056b3;
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 91, 187, 0.25);
+      background: linear-gradient(90deg, #0062cc, #0097a7);
+      box-shadow: 0 6px 16px rgba(0, 91, 187, 0.4);
     }
 
-    .note {
+    /* 🔹 Note & Register */
+    .note, .register-link {
       font-size: 13px;
       text-align: center;
-      margin-top: 20px;
-      color: #7f8c8d;
-    }
-
-    .register-link {
-      text-align: center;
-      margin-top: 18px;
-      font-size: 14px;
+      margin-top: 15px;
+      color: #f1f1f1;
     }
 
     .register-link a {
-      color: #007bff;
+      color: #00e1ff;
       text-decoration: none;
       font-weight: 600;
+      transition: color 0.3s;
     }
 
     .register-link a:hover {
+      color: #ffffff;
       text-decoration: underline;
     }
 
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* 📱 Responsive */
+    @media (max-width: 480px) {
+      .login-container {
+        padding: 35px 25px;
+      }
+      h2 {
+        font-size: 26px;
+      }
     }
   </style>
 </head>
@@ -133,18 +163,19 @@
   <div class="login-container">
     <h2><i class="fa-solid fa-user-lock"></i> Login</h2>
     
-    <form method="post" action="/loginpage">
+    <!-- ✅ Security: autocomplete disabled -->
+    <form method="post" action="/loginpage" autocomplete="off">
       <div class="form-group">
         <div class="input-field">
           <i class="fa-solid fa-user left-icon"></i>
-          <input type="text" id="id" name="id" placeholder="Enter your username" required>
+          <input type="text" id="id" name="id" placeholder="Enter your username" required autocomplete="off">
         </div>
       </div>
 
       <div class="form-group">
         <div class="input-field">
           <i class="fa-solid fa-lock left-icon"></i>
-          <input type="password" id="password" name="password" placeholder="Enter your password" required>
+          <input type="password" id="password" name="password" placeholder="Enter your password" required autocomplete="off">
           <i class="fa-solid fa-eye-slash toggle-password" data-target="password"></i>
         </div>
       </div>
@@ -162,6 +193,7 @@
   </div>
 
 <script>
+  // 👁 Password show/hide toggle
   document.querySelectorAll(".toggle-password").forEach(icon => {
     icon.addEventListener("click", function() {
       const targetId = this.getAttribute("data-target");
@@ -179,11 +211,6 @@
         }
       }
     });
-  });
-  
-    document.addEventListener("DOMContentLoaded", () => {
-    const alerts = document.querySelectorAll('.alert');
-    alerts.forEach(alert => setTimeout(() => alert.remove(), 3000));
   });
 </script>
 

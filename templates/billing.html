@@ -4,16 +4,17 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Billing — Mobile Shop</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 <style>
   :root{
     --primary:#0b63d6;
     --muted:#6b7280;
-    --bg-gradient:linear-gradient(135deg, #dbeafe 0%, #eef2ff 40%, #ffffff 100%);
-    --card:#ffffffcc; /* glass effect */
+    --bg-gradient:linear-gradient(135deg,#e3f2fd 0%,#ffffff 100%);
+    --card:rgba(255,255,255,0.95);
+    --radius:12px;
     --success:#16a34a;
     --danger:#ef4444;
-    --radius:12px;
   }
 
   *{box-sizing:border-box;}
@@ -22,7 +23,6 @@
     font-family:"Inter","Segoe UI",Tahoma,sans-serif;
     background:var(--bg-gradient);
     color:#0f172a;
-    -webkit-font-smoothing:antialiased;
     min-height:100vh;
     display:flex;
     justify-content:center;
@@ -34,7 +34,6 @@
     width:100%;
     max-width:1100px;
     background:var(--card);
-    backdrop-filter:blur(8px);
     border-radius:var(--radius);
     padding:25px;
     box-shadow:0 10px 30px rgba(2,6,23,0.12);
@@ -67,18 +66,10 @@
     font-weight:600;
     transition:all 0.25s ease;
   }
-  .btn:hover{
-    background:#084cb6;
-    transform:translateY(-1px);
-  }
-  .btn.ghost{
-    background:transparent;
-    color:var(--primary);
-    border:1px solid rgba(11,99,214,0.3);
-  }
+  .btn:hover{ background:#084cb6; transform:translateY(-1px); }
+  .btn.ghost{ background:transparent; color:var(--primary); border:1px solid rgba(11,99,214,0.3); }
   .btn.danger{ background:var(--danger); }
 
-  /* CUSTOMER INFO */
   .customer-row{
     display:flex;
     gap:14px;
@@ -103,7 +94,6 @@
   }
   .field input[readonly]{ background:#f7f9ff; color:#243b53; }
 
-  /* PRODUCTS TABLE */
   .products-header{
     display:flex;
     justify-content:space-between;
@@ -188,7 +178,6 @@
   }
   .icon-btn:hover{ background:#f2f6ff; }
 
-  /* Modal */
   .modal{
     position:fixed;
     inset:0;
@@ -199,7 +188,7 @@
   }
   .modal.show{ display:flex; }
   .modal-backdrop{
-    position:absolute; inset:0; background:rgba(3,7,18,0.45);
+    position:absolute; inset:0; background:rgba(3,7,18,0.25);
     backdrop-filter: blur(2px);
   }
   .modal-card{
@@ -210,7 +199,7 @@
     background:var(--card);
     border-radius:12px;
     padding:18px;
-    box-shadow:0 20px 60px rgba(2,6,23,0.35);
+    box-shadow:0 20px 60px rgba(2,6,23,0.25);
   }
   .modal-grid{ display:flex; gap:12px; flex-wrap:wrap; }
   .modal-grid .field{ flex:1; min-width:160px; }
@@ -241,7 +230,7 @@
     <div class="customer-row">
       <div class="field">
         <label>Customer</label>
-        <select name="customer_id" onchange="fetchCustomer(this.value)" required>
+        <select id="customerSelect" name="customer_id" onchange="fetchCustomer(this.value)" required>
           <option value="">— Select customer —</option>
           {% for c in customers %}
             <option value="{{ c.customer_id }}">{{ c.name }} — {{ c.Contact }}</option>
@@ -279,14 +268,8 @@
       <table id="productTable">
         <thead>
           <tr>
-            <th style="width:18%">Product</th>
-            <th style="width:12%">Serial</th>
-            <th style="width:12%">IMEI</th>
-            <th style="width:12%">Color</th>
-            <th style="width:12%">Price</th>
-            <th style="width:8%" class="td-center">Qty</th>
-            <th style="width:12%" class="td-right">Amount</th>
-            <th style="width:6%" class="td-center"> </th>
+            <th>Product</th><th>Serial</th><th>IMEI</th><th>Color</th>
+            <th>Price</th><th class="td-center">Qty</th><th class="td-right">Amount</th><th class="td-center"> </th>
           </tr>
         </thead>
         <tbody id="productBody"></tbody>
@@ -309,7 +292,7 @@
   </form>
 </div>
 
-<!-- Product Modal (unchanged) -->
+<!-- Product Modal -->
 <div class="modal" id="productModal">
   <div class="modal-backdrop" onclick="closeProductModal()"></div>
   <div class="modal-card">
@@ -320,7 +303,7 @@
         <select id="modal_product" onchange="modalFetchProduct(this.value)">
           <option value="">— Select product —</option>
           {% for p in products %}
-            <option value="{{ p.product_id }}">{{ p.iphone_model }} ({{ p.iphone_storage }})  ({{ p.iphone_imei }})</option>
+            <option value="{{ p.product_id }}">{{ p.iphone_model }} ({{ p.iphone_storage }}) ({{ p.iphone_imei }})</option>
           {% endfor %}
         </select>
       </div>
@@ -334,7 +317,7 @@
       </div>
       <div class="field">
         <label>Qty</label>
-        <input id="modal_qty" type="number" min="1" value="1" class="input-compact" />
+        <input id="modal_qty" type="number" min="1" class="input-compact" />
       </div>
     </div>
     <div style="display:flex; gap:8px; justify-content:flex-end;">
@@ -363,7 +346,14 @@ function fetchCustomer(id){
     });
 }
 
-function openProductModal(){ document.getElementById('productModal').classList.add('show'); }
+function openProductModal(){
+  document.getElementById('productModal').classList.add('show');
+  document.getElementById('modal_product').value='';
+  document.getElementById('modal_price').value='';
+  document.getElementById('modal_stock').textContent='—';
+  document.getElementById('modal_qty').value='';
+}
+
 function closeProductModal(){ document.getElementById('productModal').classList.remove('show'); }
 
 function modalFetchProduct(id){
@@ -373,6 +363,7 @@ function modalFetchProduct(id){
     .then(data=>{
       document.getElementById('modal_price').value = data.iphone_sale_price || '';
       document.getElementById('modal_stock').textContent = "Stock: " + (data.iphone_stock || 0);
+      document.getElementById('modal_qty').value = 1; // Set 1 when product selected
     });
 }
 
@@ -380,13 +371,14 @@ function addProductFromModal(){
   const pid=document.getElementById('modal_product').value;
   const qty=parseInt(document.getElementById('modal_qty').value)||1;
   if(!pid){ alert('Select product'); return; }
+
   fetch('/get_product/' + pid)
     .then(r=>r.json())
     .then(data=>{
       const tbody=document.getElementById('productBody');
       const tr=document.createElement('tr');
       tr.innerHTML=`
-        <td><div style="font-weight:700">${data.iphone_model} / ${data.iphone_storage}</div>
+        <td><strong>${data.iphone_model} / ${data.iphone_storage}</strong>
           <input type="hidden" name="product_id[]" value="${data.product_id}">
         </td>
         <td>${data.iphone_serial||''}<input type="hidden" name="serial[]" value="${data.iphone_serial||''}"></td>
@@ -429,6 +421,5 @@ function submitForm(){
   document.getElementById('billingForm').submit();
 }
 </script>
-
 </body>
 </html>
