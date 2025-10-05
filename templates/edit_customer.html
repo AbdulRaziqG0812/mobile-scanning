@@ -1,123 +1,223 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Edit Customer</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <style>
-    body {
-      font-family: "Segoe UI", Tahoma, sans-serif;
-      background: #f4f6f9;
-      margin: 0;
-      padding: 30px;
-      color: #333;
-    }
+<meta charset="UTF-8">
+<title>Edit Customer</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-    .form-container {
-      max-width: 550px;
-      margin: auto;
-      background: #fff;
-      padding: 25px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
+<style>
+  /* 🌙 Background */
+  body {
+    font-family: "Poppins", sans-serif;
+    margin: 0;
+    padding: 40px 20px;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1b2735, #2c3e50, #243b55);
+    background-size: 400% 400%;
+    animation: gradientFlow 18s ease infinite;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    color: #eaeaea;
+    overflow-y: auto;
+  }
 
-    h2 {
-      text-align: center;
-      color: #004aad;
-      margin-bottom: 25px;
-      font-size: 24px;
-      font-weight: 700;
-      text-transform: uppercase;
-      border-bottom: 3px solid #004aad;
-      display: inline-block;
-      padding-bottom: 6px;
-    }
+  @keyframes gradientFlow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
 
-    label {
-      font-weight: 600;
-      display: block;
-      margin-bottom: 6px;
-      color: #333;
-      font-size: 14px;
-    }
+  /* 🧊 Glassmorphic container */
+  .form-container {
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 18px;
+    padding: 40px 45px;
+    max-width: 550px;
+    width: 100%;
+    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.6);
+    animation: fadeIn 0.6s ease-in-out;
+  }
 
-    input {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 15px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 14px;
-      transition: 0.2s;
-    }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 
-    input:focus {
-      border-color: #007bff;
-      outline: none;
-      box-shadow: 0 0 4px rgba(0,123,255,0.3);
-    }
+  /* Header */
+  h2 {
+    text-align: center;
+    color: #00c6ff;
+    font-size: 28px;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 25px;
+    text-shadow: 0 0 18px rgba(0, 198, 255, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
 
-    /* Buttons */
-    .btn { 
-      padding: 8px 14px; 
-      border-radius: 8px; 
-      color: white; 
-      font-size: 14px; 
-      text-decoration: none; 
-      font-weight: 500;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      transition: all 0.25s ease;
-      border: none;
-      cursor: pointer;
-    }
-    .btn i { font-size: 14px; }
+  /* Form */
+  form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px 25px;
+  }
 
-    .btn-save { background: #28a745; }
-    .btn-save:hover { background: #218838; }
+  label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #f0f0f0;
+    display: block;
+    margin-bottom: 6px;
+  }
 
-    .btn-back { background: #17a2b8; }
-    .btn-back:hover { background: #11707f; }
+  input {
+    width: 250px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.18);
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+    font-size: 14px;
+    outline: none;
+    transition: 0.3s;
+  }
 
-    /* Button alignment */
-    .form-actions {
-      text-align: center;
-      margin-top: 20px;
-    }
-  </style>
+  input:focus {
+    border-color: #00c6ff;
+    box-shadow: 0 0 6px rgba(0,198,255,0.4);
+  }
+
+  input:hover {
+    background: rgba(255,255,255,0.12);
+  }
+
+  /* ✅ Buttons row */
+  .btn-group {
+    grid-column: span 2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin-top: 10px;
+  }
+
+  .btn-submit, .btn-back {
+    flex: 1;
+    max-width: 220px;
+    text-align: center;
+    padding: 12px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: 0.3s;
+    cursor: pointer;
+  }
+
+  .btn-submit {
+    border: none;
+    background: linear-gradient(90deg, #00c6ff, #0072ff);
+    color: #fff;
+    box-shadow: 0 5px 20px rgba(0,198,255,0.35);
+  }
+
+  .btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,198,255,0.45);
+  }
+
+  .btn-back {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    text-decoration: none;
+  }
+
+  .btn-back:hover {
+    background: rgba(255,255,255,0.2);
+    transform: translateY(-2px);
+  }
+
+  /* Alerts */
+  .alert {
+    width: 100%;
+    margin-bottom: 15px;
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 14px;
+    text-align: center;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .alert-success {
+    background: rgba(0, 128, 0, 0.4);
+    border: 1px solid #28a745;
+    color: #caffc9;
+  }
+
+  .alert-error {
+    background: rgba(128, 0, 0, 0.4);
+    border: 1px solid #dc3545;
+    color: #ffc9c9;
+  }
+</style>
 </head>
+
 <body>
 
   <div class="form-container">
-    <h2>✏️ Edit Customer</h2>
+    <h2><i class="fa-solid fa-user-pen"></i> Edit Customer</h2>
 
-    <form method="post">
-      <label for="name">Full Name</label>
-      <input type="text" name="name" id="name" value="{{ customer.name }}" required>
+    <!-- ✅ Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, msg in messages %}
+          <div class="alert alert-{{ 'success' if category=='success' else 'error' }}">
+            <i class="fa-solid {% if category == 'success' %}fa-circle-check{% else %}fa-triangle-exclamation{% endif %}"></i>
+            {{ msg }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
 
-      <label for="mobile">Mobile</label>
-      <input type="text" name="mobile" id="mobile" value="{{ customer.mobile }}" required>
+    <!-- ✅ FORM -->
+    <form method="POST">
+      <div>
+        <label><i class="fa-solid fa-user"></i> Full Name</label>
+        <input type="text" name="name" value="{{ customer.name }}" placeholder="Enter customer name" required>
+      </div>
 
-      <label for="contact">Contact</label>
-      <input type="text" name="contact" id="contact" value="{{ customer.Contact }}">
+      <div>
+        <label><i class="fa-solid fa-phone"></i> Mobile</label>
+        <input type="text" name="mobile" value="{{ customer.mobile }}" placeholder="Enter mobile number" required>
+      </div>
 
-      <label for="address">Address</label>
-      <input type="text" name="address" id="address" value="{{ customer.address }}">
+      <div>
+        <label><i class="fa-solid fa-address-book"></i> Contact</label>
+        <input type="text" name="contact" value="{{ customer.Contact }}" placeholder="Enter contact number" required>
+      </div>
 
-      <div class="form-actions">
-        <button type="submit" class="btn btn-save"><i class="fa fa-save"></i> Save</button>
+      <div>
+        <label><i class="fa-solid fa-location-dot"></i> Address</label>
+        <input type="text" name="address" value="{{ customer.address }}" placeholder="Enter address" required>
+      </div>
+
+      <!-- ✅ Buttons Row -->
+      <div class="btn-group">
+        <button type="submit" class="btn-submit"><i class="fa-solid fa-floppy-disk"></i> Update Customer</button>
       </div>
     </form>
   </div>
-  <script>
-    // Auto-hide flash messages after 3 seconds
-    document.addEventListener("DOMContentLoaded", () => {
-      const flashes = document.querySelectorAll('.flash');
-      flashes.forEach(flash => setTimeout(() => flash.remove(), 3000));
-    });
-  </script>
 
 </body>
 </html>

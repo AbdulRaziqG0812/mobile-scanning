@@ -364,7 +364,7 @@ def edit_product(product_id):
             iphone_model = request.form.get('iphone_model')
             iphone_storage = request.form.get('iphone_storage')
             iphone_purchase_price = request.form.get('iphone_purchase_price')
-            iphone_sale_price = request.form.get('iphone_price')
+            iphone_sale_price = request.form.get('iphone_sale_price')
             iphone_imei = request.form.get('iphone_imei')
             iphone_color = request.form.get('iphone_color')
             iphone_stock = request.form.get('iphone_stock')
