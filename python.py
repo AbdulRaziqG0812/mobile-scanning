@@ -21,30 +21,32 @@ def home():
 
 # route for dashboard    
 
-@app.route('/dashboard', methods=['GET', 'POST'])
-def dashboard(): 
+@app.route('/dashboard', methods=['GET'])
+def dashboard():
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor(dictionary=True)
 
-    # Total Products
+    # ✅ Total Products
     cursor.execute("SELECT COUNT(*) AS total_products FROM iphone_products")
-    total_products = cursor.fetchone()['total_products']
+    total_products = cursor.fetchone()['total_products'] or 0
 
-    # Total Customers
+    # ✅ Total Customers
     cursor.execute("SELECT COUNT(*) AS total_customers FROM customers")
-    total_customers = cursor.fetchone()['total_customers']
+    total_customers = cursor.fetchone()['total_customers'] or 0
 
-    # Monthly Sales and Revenue
+    # ✅ Monthly Sales and Revenue
     now = datetime.now()
     month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
     cursor.execute("""
-        SELECT COUNT(*) AS monthly_sales, IFNULL(SUM(net_total),0) AS monthly_revenue
+        SELECT COUNT(*) AS monthly_sales, IFNULL(SUM(net_total), 0) AS monthly_revenue
         FROM bills
         WHERE bill_date >= %s
     """, (month_start,))
-    sales_data = cursor.fetchone()
-    monthly_sales = sales_data['monthly_sales'] or 0
-    monthly_revenue = sales_data['monthly_revenue'] or 0
+
+    sales_data = cursor.fetchone() or {'monthly_sales': 0, 'monthly_revenue': 0}
+    monthly_sales = sales_data['monthly_sales']
+    monthly_revenue = sales_data['monthly_revenue']
 
     cursor.close()
     conn.close()
@@ -56,6 +58,7 @@ def dashboard():
         monthly_sales=monthly_sales,
         monthly_revenue=monthly_revenue
     )
+
 
 # route for loginpage
 
@@ -600,7 +603,7 @@ def billing():
         discount = request.form["discount"]
         net_total = request.form["net_total"]
 
-        # ✅ Fetch full customer info (with aliases for consistency)
+        # ✅ Fetch customer info
         cursor.execute("""
             SELECT 
                 name AS customer_name, 
@@ -618,7 +621,7 @@ def billing():
             conn.close()
             return redirect(url_for("billing"))
 
-        # ✅ Insert into bills with all details
+        # ✅ Insert into bills
         cursor.execute("""
             INSERT INTO bills (
                 customer_id, customer_name, customer_mobile,
@@ -638,7 +641,7 @@ def billing():
 
         bill_id = cursor.lastrowid
 
-        # ✅ Insert all items into bill_items
+        # ✅ Insert items
         product_ids = request.form.getlist("product_id[]")
         qtys = request.form.getlist("qty[]")
         amounts = request.form.getlist("amount[]")
@@ -648,15 +651,16 @@ def billing():
             qty = int(qtys[i])
             amount = float(amounts[i])
 
+            # ✅ Insert item including purchase price
             cursor.execute("""
                 INSERT INTO bill_items (
                     bill_id, product_id, product_model, product_storage,
                     product_price, product_serial, product_imei,
-                    product_color, qty, amount
+                    product_color, purchase_price, qty, amount
                 )
                 SELECT %s, product_id, iphone_model, iphone_storage,
                        iphone_sale_price, iphone_serial, iphone_imei,
-                       iphone_color, %s, %s
+                       iphone_color, iphone_purchase_price, %s, %s
                 FROM iphone_products
                 WHERE product_id = %s
             """, (bill_id, qty, amount, pid))
@@ -716,13 +720,14 @@ def billing_list():
     """)
     bills = cursor.fetchall()
 
-    # ✅ Fetch related items for each bill
+    # ✅ Fetch related items for each bill (now includes purchase_price)
     bill_items = {}
     for bill in bills:
         cursor.execute("""
             SELECT 
                 bi.qty, 
-                bi.product_price AS price, 
+                bi.product_price AS sale_price, 
+                bi.purchase_price, 
                 bi.amount,
                 bi.product_model,
                 bi.product_storage,
@@ -745,6 +750,7 @@ def billing_list():
         sub_total=sub_total, 
         net_total=net_total
     )
+
 
 # ---------- DELETE BILL ----------
 @app.route('/delete_bill/<int:bill_id>', methods=['GET'])
@@ -972,51 +978,51 @@ def reports():
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor(dictionary=True)
 
-    # Pick last month with data if none selected
+    # 🧾 Pick last month with data if none selected
     if not selected_month:
         cursor.execute("SELECT DATE_FORMAT(MAX(bill_date), '%Y-%m') AS last_month FROM bills")
         result = cursor.fetchone()
         selected_month = result['last_month'] if result['last_month'] else None
 
-    # Query to calculate sales, purchase, profit
+    # ✅ Main Query — use purchase_price from bill_items
     query = """
         SELECT 
             DATE_FORMAT(b.bill_date, '%Y-%m') AS month,
-            SUM(IFNULL(bi.qty,0)) AS total_units,
-            SUM(IFNULL(bi.qty * CAST(bi.product_price AS DECIMAL(12,2)),0)) AS total_sales,
-            SUM(IFNULL(bi.qty * CAST(CASE 
-                    WHEN p.iphone_purchase_price IS NULL OR p.iphone_purchase_price='' THEN 0 
-                    ELSE p.iphone_purchase_price 
-                END AS DECIMAL(12,2)),0)) AS total_purchase,
-            SUM(IFNULL(bi.qty * (CAST(bi.product_price AS DECIMAL(12,2)) - 
-                CAST(CASE 
-                        WHEN p.iphone_purchase_price IS NULL OR p.iphone_purchase_price='' THEN 0 
-                        ELSE p.iphone_purchase_price 
-                    END AS DECIMAL(12,2))
-            ),0)) AS total_profit
+            SUM(IFNULL(bi.qty, 0)) AS total_units,
+
+            -- 💰 Total Sales
+            SUM(IFNULL(bi.qty * bi.product_price, 0)) AS total_sales,
+
+            -- 🛒 Total Purchase (from bill_items.purchase_price)
+            SUM(IFNULL(bi.qty * bi.purchase_price, 0)) AS total_purchase,
+
+            -- 📈 Total Profit
+            SUM(
+                IFNULL(bi.qty * (bi.product_price - bi.purchase_price), 0)
+            ) AS total_profit
+
         FROM bills b
         LEFT JOIN bill_items bi ON b.bill_id = bi.bill_id
-        LEFT JOIN iphone_products p ON bi.product_id = p.product_id
+        WHERE bi.product_id IS NOT NULL
     """
 
+    # 📅 Month filter
     params = []
     if selected_month:
-        query += " WHERE DATE_FORMAT(b.bill_date, '%Y-%m') = %s"
+        query += " AND DATE_FORMAT(b.bill_date, '%Y-%m') = %s"
         params.append(selected_month)
 
-    query += " GROUP BY DATE_FORMAT(b.bill_date, '%Y-%m') ORDER BY DATE_FORMAT(b.bill_date, '%Y-%m') ASC"
+    query += " GROUP BY DATE_FORMAT(b.bill_date, '%Y-%m') ORDER BY DATE_FORMAT(b.bill_date, '%Y-%m') DESC"
 
+    # 🔍 Execute query
     cursor.execute(query, params)
     data = cursor.fetchall()
+
     cursor.close()
     conn.close()
 
-    # ✅ Always define chart variables to avoid Jinja2 UndefinedError
-    chart_labels = []
-    sales_data = []
-    purchase_data = []
-    profit_data = []
-    units_data = []
+    # ✅ Prepare chart data
+    chart_labels, sales_data, purchase_data, profit_data, units_data = [], [], [], [], []
 
     if data:
         for row in data:
@@ -1032,6 +1038,13 @@ def reports():
         profit_data = [0]
         units_data = [0]
 
+    # 🧮 Totals
+    total_sales = sum(sales_data)
+    total_purchase = sum(purchase_data)
+    total_profit = sum(profit_data)
+    total_units = sum(units_data)
+
+    # 🖼️ Render report template
     return render_template(
         "reports.html",
         selected_month=selected_month,
@@ -1040,11 +1053,12 @@ def reports():
         purchase_data=purchase_data,
         profit_data=profit_data,
         units_data=units_data,
-        total_sales=sum(sales_data),
-        total_purchase=sum(purchase_data),
-        total_profit=sum(profit_data),
-        total_units=sum(units_data)
+        total_sales=total_sales,
+        total_purchase=total_purchase,
+        total_profit=total_profit,
+        total_units=total_units
     )
+
 
 
 if __name__ == '__main__':

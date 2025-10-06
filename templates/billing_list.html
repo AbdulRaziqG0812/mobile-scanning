@@ -82,6 +82,7 @@ tfoot td {
   color: #ffcc00;
   text-shadow: 0 0 4px rgba(0,0,0,0.4);
 }
+
 /* Buttons */
 .btn { 
   padding: 7px 12px; 
@@ -187,6 +188,18 @@ tfoot td {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* ✅ Keep each bill on one line */
+td {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+td:nth-child(6), td:nth-child(7), td:nth-child(8) {
+  max-width: 250px;
+  white-space: normal;
+  word-wrap: break-word;
+}
 </style>
 </head>
 <body>
@@ -231,23 +244,38 @@ tfoot td {
         <th>Contact</th>
         <th>IMEI</th>
         <th>Serial</th>
+        <th>Purchase Price</th>
         <th>Subtotal</th>
         <th>Discount</th>
         <th>Net Total</th>
         <th>Actions</th>
       </tr>
     </thead>
+
+    <!-- ✅ Corrected Tbody -->
     <tbody>
       {% for bill in bills %}
-        {% for item in bill_items[bill.bill_id] %}
         <tr>
           <td>{{ bill.bill_id }}</td>
           <td>{{ bill.bill_date.strftime('%Y-%m-%d %H:%M') }}</td>
           <td>{{ bill.customer_name }}</td>
           <td>{{ bill.customer_mobile }}</td>
           <td>{{ bill.customer_contact }}</td>
-          <td>{{ item.product_imei }}</td>
-          <td>{{ item.product_serial }}</td>
+          <td>
+            {% for item in bill_items[bill.bill_id] %}
+              {{ item.product_imei }}{% if not loop.last %}, {% endif %}
+            {% endfor %}
+          </td>
+          <td>
+            {% for item in bill_items[bill.bill_id] %}
+              {{ item.product_serial }}{% if not loop.last %}, {% endif %}
+            {% endfor %}
+          </td>
+          <td>
+            {% for item in bill_items[bill.bill_id] %}
+              {{ "%.2f"|format(item.purchase_price or 0) }}{% if not loop.last %}, {% endif %}
+            {% endfor %}
+          </td>
           <td>{{ "%.2f"|format(bill.subtotal) }}</td>
           <td>{{ "%.2f"|format(bill.discount) }}</td>
           <td>{{ "%.2f"|format(bill.net_total) }}</td>
@@ -256,16 +284,16 @@ tfoot td {
             <a href="{{ url_for('delete_bill', bill_id=bill.bill_id) }}" class="btn btn-danger" title="Delete" onclick="return confirm('Are you sure?')"><i class="fa fa-trash"></i></a>
           </td>
         </tr>
-        {% endfor %}
       {% else %}
-      <tr>
-        <td colspan="12" style="padding:18px;color:#fff;">No bills found.</td>
-      </tr>
+        <tr>
+          <td colspan="12" style="padding:18px;color:#fff;">No bills found.</td>
+        </tr>
       {% endfor %}
     </tbody>
+
     <tfoot>
       <tr style="background: rgba(0, 0, 0, 0.3); font-weight: 600; color: #ffcc00;">
-        <td colspan="7" style="text-align:right; padding: 12px 14px;">Total Summary:</td>
+        <td colspan="8" style="text-align:right; padding: 12px 14px;">Total Summary:</td>
         <td style="text-align:right;">OMR {{ "%.2f"|format(sub_total) }}</td>
         <td></td>
         <td style="text-align:right;">OMR {{ "%.2f"|format(net_total) }}</td>

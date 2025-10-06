@@ -175,6 +175,17 @@
     </div>
 
   <script>
+    // ✅ Auto refresh dashboard every 15 seconds
+    setInterval(() => {
+      location.reload();
+    }, 15000); // 15000ms = 15 seconds
+
+    // ✅ Optional: Fade alert messages automatically
+    document.addEventListener("DOMContentLoaded", () => {
+      const alerts = document.querySelectorAll('.alert');
+      alerts.forEach(alert => setTimeout(() => alert.remove(), 3000));
+    });
+
     document.addEventListener("DOMContentLoaded", () => {
       const alerts = document.querySelectorAll('.alert');
       alerts.forEach(alert => setTimeout(() => alert.remove(), 3000));

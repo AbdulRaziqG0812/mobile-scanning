@@ -73,6 +73,7 @@ CREATE TABLE bill_items (
     product_serial VARCHAR(100),
     product_imei VARCHAR(100),
     product_color VARCHAR(50),
+    purchase_price DECIMAL(12,2) DEFAULT 0,
     qty INT NOT NULL DEFAULT 1,
     amount DECIMAL(12,2) NOT NULL DEFAULT 0
 );
